@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+.DS_Store
+.claude/
+CLAUDE.md
+Projet_Methodes_Ensemble_FR.pdf
+project.pdf
