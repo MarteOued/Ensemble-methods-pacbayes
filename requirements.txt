@@ -1,0 +1,6 @@
+# Testé avec Python 3.9.6
+numpy>=1.24          # testé : 2.0.2
+scipy>=1.10          # testé : 1.13.1
+scikit-learn>=1.4    # testé : 1.6.1
+matplotlib>=3.7      # testé : 3.9.4
+pandas>=2.0          # testé : 2.3.3 (requis par data/prepdata.py)
