@@ -6,8 +6,7 @@ venv/
 .DS_Store
 Projet_Methodes_Ensemble_FR.pdf
 project.pdf
-results/*_parts/
-results/exp_test*
-results/*.log
-results/*_test*
-figures/*_test*
+**/results/*_parts/
+**/results/*_test*
+**/results/*.log
+**/figures/*_test*

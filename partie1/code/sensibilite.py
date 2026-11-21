@@ -46,6 +46,8 @@ Usage : python sensibilite.py            (calcule puis écrit les tableaux et fi
         python sensibilite.py --n-rep 2 --R 4 --out-tag test   (test rapide, fichiers séparés)
 """
 import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "code"))   # code fourni par le prof (benchkit.py)
 import time
 import argparse
 import warnings

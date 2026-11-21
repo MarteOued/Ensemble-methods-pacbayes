@@ -269,11 +269,11 @@ Temps passé, pour chaque membre, à s'entraîner sur les 5 plis et à prédire 
 
 | Membre | Entraînement des 5 plis (s) | Prédictions out-of-fold (s) | Total (s) |
 |---|---|---|---|
-| Arbre prof. 5 (membre) | 0,192 | 0,004 | 0,196 |
-| kNN (k=7) | 0,028 | 2,296 | 2,323 |
-| Régression logistique | 0,049 | 0,006 | 0,054 |
-| Naive Bayes (membre) | 0,027 | 0,006 | 0,034 |
-| **Total des 4 membres** | 0,296 | 2,312 | 2,607 |
+| Arbre prof. 5 (membre) | 0,197 | 0,004 | 0,200 |
+| kNN (k=7) | 0,029 | 2,344 | 2,374 |
+| Régression logistique | 0,049 | 0,006 | 0,055 |
+| Naive Bayes (membre) | 0,031 | 0,008 | 0,039 |
+| **Total des 4 membres** | 0,307 | 2,361 | 2,668 |
 
 ## 7. Coût de calcul (un seul cœur)
 Médiane sur les 25 jeux du temps moyen par découpage, et temps sur le plus gros jeu (bankmarketing, 31 647 exemples d'entraînement).

@@ -68,7 +68,7 @@ import matplotlib.pyplot as plt
 
 import datasets as ds
 from ensembles import default_base_models
-from run_experiments import MAIN_METHODS, MEMBER_METHODS, LABELS
+from run_experiments import MAIN_METHODS, LABELS
 from tables import md_table, num
 
 HERE = os.path.dirname(os.path.abspath(__file__))

@@ -4,3 +4,5 @@ scipy>=1.10          # testé : 1.13.1
 scikit-learn>=1.4    # testé : 1.6.1
 matplotlib>=3.7      # testé : 3.9.4
 pandas>=2.0          # testé : 2.3.3 (requis par data/prepdata.py)
+joblib>=1.2          # parallélisation des expériences (installé avec scikit-learn)
+threadpoolctl>=3.1   # limite les threads pour mesurer les temps (installé avec scikit-learn)

@@ -32,13 +32,13 @@ où $Z_t$ renormalise les poids. Le classifieur final est $H(x) = \mathrm{sign}\
 
 **Vérification contre scikit-learn.** J'ai comparé chacune de mes trois implémentations à son équivalent (`BaggingClassifier`, `AdaBoostClassifier`, `StackingClassifier`), avec les mêmes réglages et exactement les mêmes découpages, sur 6 jeux (wdbc, pima, australian, iono, german, yeast3) et 10 découpages chacun, soit 60 cas par méthode (Tableau 2).
 
-> **Tableau 2.** Vérification de mes implémentations. Source : `results/verify_tables.md` (tableaux 1 et 2).
+> **Tableau 2.** Vérification de mes implémentations. Source : `partie1/results/verify_tables.md` (tableaux 1 et 2).
 
 - **AdaBoost sur stumps et stacking** : prédictions identiques à celles de scikit-learn sur les 60 cas (accord de 100 %), avec des poids $\alpha_t$ et des erreurs $\varepsilon_t$ identiques sur les 10 premiers tours, et des coefficients du méta-modèle identiques.
 - **Bagging** : l'erreur de test est de 13,30 % pour la mienne contre 13,17 % pour scikit-learn ; l'accord sur les prédictions est de 98,02 %, au niveau de l'accord de scikit-learn avec lui-même quand on change la graine (98,10 %). Les bootstraps dépendent du hasard : on ne peut pas attendre l'identité. L'erreur OOB moyenne est de 13,71 % pour la mienne contre 13,60 % (Figure 2).
 - **AdaBoost sur arbres de profondeur 3** : accord de 99,16 % (99,49 % pour scikit-learn contre lui-même). Mes $\alpha_t$ s'écartent de ceux de scikit-learn de plus de 0,01 dans 11 cas sur 60 ; scikit-learn s'écarte de lui-même dans 9 cas sur 60 quand on ne change que sa graine. L'explication est que, lorsque deux coupures sont à égalité parfaite, la graine décide laquelle est choisie, et un seul choix différent au tour 2 modifie tous les poids suivants. J'ai vérifié que ma formule de mise à jour des poids redonne exactement les $\alpha_t$ de scikit-learn lorsque ce hasard est écarté.
 
-> **Figure 2.** `figures/verify_oob.png` : mon erreur OOB contre celle de scikit-learn (gauche) ; l'erreur OOB contre l'erreur de test (droite).
+> **Figure 2.** `partie1/figures/verify_oob.png` : mon erreur OOB contre celle de scikit-learn (gauche) ; l'erreur OOB contre l'erreur de test (droite).
 
 ## 2. Protocole expérimental
 
@@ -46,7 +46,7 @@ où $Z_t$ renormalise les poids. Le classifieur final est $H(x) = \mathrm{sign}\
 
 J'utilise 25 jeux : les 22 de `bk.REAL_SMALL` et `bk.REAL_LARGE`, auxquels j'ajoute `yeast6`, `wine4` et `abalone17`, que le chargeur fourni sait lire mais qui ne figurent pas dans ces listes. Je les ai retenus parce qu'ils sont beaucoup plus déséquilibrés (1,4 % à 3,3 % de minorité) et donnent donc plus de matière à l'étude du déséquilibre. J'ai écarté `abalone20` (26 exemples positifs) et `hayes` (132 exemples), trop petits pour donner des résultats fiables. Le sujet demande au moins 15 jeux ; en prendre 25 rend les rangs moyens et les tests plus fiables. Aucun jeu n'est sous-échantillonné, y compris `bankmarketing` (45 211 exemples).
 
-> **Tableau 1.** Les 25 jeux : $m$, $d$, proportion de la classe minoritaire. Source : `results/datasets_table.md`. **Figure 1** : `figures/datasets_minority.png`.
+> **Tableau 1.** Les 25 jeux : $m$, $d$, proportion de la classe minoritaire. Source : `partie1/results/datasets_table.md`. **Figure 1** : `partie1/figures/datasets_minority.png`.
 
 **Seuil de déséquilibre.** Je dis qu'un jeu est *déséquilibré* si sa classe minoritaire représente moins de 15 % des exemples. Ce seuil est conventionnel. Je l'ai retenu parce qu'il classe comme déséquilibrés les cinq jeux cités par le sujet (yeast3, libras, satimage, pageblocks, abalone8) et parce qu'aucun jeu n'a une proportion de minorité entre 14,3 % (segmentation) et 23,5 % (vehicle) : tout seuil dans cet intervalle donne la même partition. On obtient 15 jeux équilibrés et 10 jeux déséquilibrés. Sur les jeux les plus déséquilibrés, le test ne contient que très peu d'exemples minoritaires (7 pour libras, 10 pour yeast6, 16 pour wine4, 17 pour abalone17) : les métriques centrées sur cette classe y sont très bruitées.
 
@@ -80,7 +80,7 @@ Je calcule les quatre métriques sur tous les jeux, et je mets en avant celles q
 - **accuracy** (taux de bonnes prédictions) et **AUC** pour les jeux équilibrés ;
 - **balanced accuracy** (moyenne des rappels des deux classes), **F1 de la classe minoritaire** et **AUC** pour les jeux déséquilibrés, où l'accuracy est trompeuse : sur un jeu à 10 % de positifs, répondre toujours « négatif » donne 90 % d'accuracy.
 
-La classe minoritaire n'est pas toujours celle étiquetée $+1$ : je la détermine sur le train de chaque jeu, pour que le F1 porte toujours sur la classe rare. L'AUC est calculée à partir du score continu de chaque méthode. Le seuil de décision est celui par défaut de chaque méthode ; je ne l'ajuste pas. Je mesure aussi les temps d'entraînement et de prédiction. Toutes les méthodes tournent sur un seul cœur, pour que les temps soient comparables entre méthodes.
+La classe minoritaire n'est pas toujours celle étiquetée $+1$ : je la détermine sur le train de chaque jeu, pour que le F1 porte toujours sur la classe rare. L'AUC est calculée à partir du score continu de chaque méthode. Le score d'un arbre complet est presque binaire : son AUC est pratiquement égale à sa balanced accuracy (écart maximal de 0,9 point sur mes 250 mesures) et elle est donc mécaniquement basse ; il faut le garder en tête en lisant les classements en AUC. Le seuil de décision est celui par défaut de chaque méthode ; je ne l'ajuste pas. Je mesure aussi les temps d'entraînement et de prédiction. Toutes les méthodes tournent sur un seul cœur, pour que les temps soient comparables entre méthodes.
 
 ### 2.5 Analyse statistique
 
@@ -90,9 +90,9 @@ avec $k$ méthodes et $N$ jeux ($CD = 2{,}71$ pour $N = 25$ jeux et $k = 10$ mé
 
 ## 3. Résultats
 
-Les valeurs par jeu, avec écarts-types, sont dans `results/analyse_annexe.md` ; les rangs moyens sont dans le Tableau 3.
+Les valeurs par jeu, avec écarts-types, sont dans `partie1/results/analyse_annexe.md` ; les rangs moyens sont dans le Tableau 3.
 
-> **Tableau 3.** Rangs moyens et test de Friedman, par métrique (tous les jeux, jeux équilibrés, jeux déséquilibrés). Source : `results/analyse_tables.md`, section 2. **Figure 3** : diagramme de différences critiques, accuracy, tous les jeux (`figures/cd/cd_tous_accuracy.png`).
+> **Tableau 3.** Rangs moyens et test de Friedman, par métrique (tous les jeux, jeux équilibrés, jeux déséquilibrés). Source : `partie1/results/analyse_tables.md`, section 2. **Figure 3** : diagramme de différences critiques, accuracy, tous les jeux (`partie1/figures/cd/cd_tous_accuracy.png`).
 
 Le test de Friedman rejette l'équivalence des 10 méthodes pour les quatre métriques (p < 0,001 sur les 25 jeux ; p = 0,002 en accuracy et en balanced accuracy, 0,011 en F1, < 0,001 en AUC sur les 10 jeux déséquilibrés). En accuracy sur les 25 jeux, la forêt aléatoire a le meilleur rang moyen (3,48), l'arbre seul le plus mauvais (9,36).
 
@@ -100,16 +100,16 @@ Le test de Friedman rejette l'équivalence des 10 méthodes pour les quatre mét
 
 **(1) Quel gain par rapport à un arbre seul, et à un modèle d'une autre famille ?**
 
-> **Tableau 4.** Gain de chaque ensemble par rapport à l'arbre seul, à la régression logistique et au kNN. Source : `results/analyse_tables.md`, section 4.
+> **Tableau 4.** Gain de chaque ensemble par rapport à l'arbre seul, à la régression logistique et au kNN. Source : `partie1/results/analyse_tables.md`, section 4.
 
-- **Par rapport à l'arbre seul, le gain est net.** Les sept ensembles gagnent entre +3,85 points (bagging) et +4,82 points (forêt aléatoire) d'accuracy, sur 25 jeux sur 25 pour presque tous (23 sur 25 pour AdaBoost sur stumps), avec p < 0,001 ; en AUC le gain est d'environ 14 à 15 points. Au sens de Nemenyi (CD = 2,71), tous les modèles sauf le kNN sont significativement meilleurs que l'arbre seul en accuracy.
+- **Par rapport à l'arbre seul, le gain est net.** Les sept ensembles gagnent entre +3,85 points (bagging) et +4,82 points (forêt aléatoire) d'accuracy, sur 25 jeux sur 25 pour presque tous (23 sur 25 pour AdaBoost sur stumps), avec p < 0,001 ; en AUC le gain est d'environ 14 à 15 points (en partie parce que le score de l'arbre seul est presque binaire, voir 2.4). Au sens de Nemenyi (CD = 2,71), tous les modèles sauf le kNN sont significativement meilleurs que l'arbre seul en accuracy.
 - **Par rapport à la régression logistique, je ne mets pas en évidence de gain** : en accuracy, les écarts vont de +1,13 à +2,09 points mais aucun n'est significatif (p corrigés entre 0,106 et 1,000), et la régression logistique gagne sur beaucoup de jeux (12 sur 25 contre le gradient boosting, par exemple). Un modèle linéaire simple est très compétitif.
 - **Par rapport au kNN, les ensembles gagnent** : +2,36 à +3,33 points d'accuracy, p ≤ 0,024 pour les sept ensembles ; au sens de Nemenyi, seuls la forêt aléatoire et le stacking sont significativement meilleurs que le kNN.
 - **Exception notable sur les jeux déséquilibrés.** En balanced accuracy sur les 10 jeux déséquilibrés, aucun ensemble ne bat significativement l'arbre seul (écarts de −1,75 à +2,18 points, p corrigés de 1,000). [HYPOTHÈSE, non testée : les ensembles moyennent beaucoup d'arbres et rendent des scores plus lissés, donc dépassent moins souvent le seuil par défaut pour la classe rare, alors qu'un arbre complet la prédit plus facilement. Voir aussi le point (4).]
 
 **(2) Bagging ou boosting ?**
 
-> **Tableau 5.** Meilleur du type bagging contre meilleur du type boosting, par jeu ; comparaisons directes. Source : `results/analyse_tables.md`, section 5.
+> **Tableau 5.** Meilleur du type bagging contre meilleur du type boosting, par jeu ; comparaisons directes. Source : `partie1/results/analyse_tables.md`, section 5.
 
 - **Mon bagging et mes deux AdaBoost ne se distinguent pas** sur les 25 jeux : −0,65 point (contre les stumps) et −0,57 point (contre les arbres de profondeur 3), avec p corrigé de 0,937 dans les deux cas.
 - **Le résultat dépend de la métrique et de la méthode de référence.** En accuracy, la forêt aléatoire bat le gradient boosting (+0,57 point, 20 victoires sur 25, p = 0,014) mais pas le Hist. gradient boosting (+0,55 point, p = 0,921). Sur les 10 jeux déséquilibrés en balanced accuracy, c'est l'inverse : le Hist. gradient boosting bat la forêt aléatoire sur **les 10 jeux** (écart de 3,93 points, p = 0,010).
@@ -120,16 +120,16 @@ Le test de Friedman rejette l'équivalence des 10 méthodes pour les quatre mét
 
 **(3) Le stacking bat-il le meilleur de ses membres ? À quel coût ?**
 
-> **Tableau 6.** Stacking et ses quatre membres, par jeu ; comparaisons ; coût. Source : `results/analyse_tables.md`, section 6.
+> **Tableau 6.** Stacking et ses quatre membres, par jeu ; comparaisons ; coût. Source : `partie1/results/analyse_tables.md`, section 6.
 
 - **Non, il ne bat pas le meilleur membre.** Face au meilleur membre de chaque jeu (choisi après coup, donc dans un sens favorable aux membres), le stacking perd en moyenne 2,13 points (10 victoires, 1 égalité, 14 défaites ; p = 0,170, non significatif).
 - **Mais il évite d'avoir à choisir.** Face au membre qui a le meilleur rang moyen (la régression logistique), il gagne +3,07 points (17 victoires, 1 égalité, 7 défaites ; p = 0,010). Sur les 15 jeux équilibrés, il ne perd jamais plus de 1,1 point par rapport au meilleur membre (et le dépasse sur 8 d'entre eux, avec une égalité sur vehicle).
 - **Il s'effondre sur certains jeux déséquilibrés** : −11,68 points sur yeast6, −14,54 sur abalone8, −9,87 sur abalone17 par rapport au meilleur membre ; sur abalone17 et wine4, sa balanced accuracy est de 50,0 % et son F1 sur la classe minoritaire est de 0 sur les 10 découpages : il prédit toujours la classe majoritaire. [HYPOTHÈSE : le méta-modèle logistique, entraîné sur des probabilités de membres très déséquilibrées, dépasse rarement le seuil de 0,5 pour la classe rare.]
-- **Coût.** Chaque membre est entraîné 6 fois. Le temps d'entraînement du stacking est de 8,0 fois la somme des temps d'entraînement de ses membres (médiane sur les jeux), et de 40,9 fois sur `bankmarketing`. Ce rapport dépasse largement 6 parce que le kNN, qui ne coûte presque rien à entraîner, coûte à la prédiction, et que le stacking doit prédire chaque pli : sur `bankmarketing`, les prédictions out-of-fold du kNN représentent 2,30 s sur 2,61 s de temps cumulé pour les membres sur les 5 plis (88 %). Rapporté à la somme (entraînement + prédiction) des membres, le coût du stacking est de 3,7 fois en médiane (2,0 fois sur `bankmarketing`).
+- **Coût.** Chaque membre est entraîné 6 fois. Le temps d'entraînement du stacking est de 8,0 fois la somme des temps d'entraînement de ses membres (médiane sur les jeux), et de 40,9 fois sur `bankmarketing`. Ce rapport dépasse largement 6 parce que le kNN, qui ne coûte presque rien à entraîner, coûte à la prédiction, et que le stacking doit prédire chaque pli : sur `bankmarketing`, les prédictions out-of-fold du kNN représentent environ 88 % du temps cumulé des membres sur les 5 plis (environ 2,3 s sur 2,6 à 2,7 s selon les exécutions). Rapporté à la somme (entraînement + prédiction) des membres, le coût du stacking est de 3,7 fois en médiane (2,0 fois sur `bankmarketing`).
 
 **(4) Jeux déséquilibrés : quelles méthodes souffrent, et que change la métrique ?**
 
-> **Tableau 7.** Classement des méthodes sur les jeux déséquilibrés selon la métrique ; accuracy contre classifieur « toujours majoritaire ». Source : `results/analyse_tables.md`, section 3. **Figure 4** : `figures/rank_by_metric_imbalanced.png`. **Figure 5** : `figures/cd/cd_desequilibres_balanced_accuracy.png`.
+> **Tableau 7.** Classement des méthodes sur les jeux déséquilibrés selon la métrique ; accuracy contre classifieur « toujours majoritaire ». Source : `partie1/results/analyse_tables.md`, section 3. **Figure 4** : `partie1/figures/rank_by_metric_imbalanced.png`. **Figure 5** : `partie1/figures/cd/cd_desequilibres_balanced_accuracy.png`.
 
 - **L'accuracy est trompeuse.** Sur trois jeux (abalone17, wine4, abalone8), la meilleure accuracy obtenue par les 10 méthodes (98,6 %, 96,7 %, 86,4 %) est exactement celle d'un classifieur qui répond toujours la classe majoritaire ; or leurs meilleures balanced accuracy ne sont que de 53,4 %, 55,6 % et 56,4 %, c'est-à-dire proches du hasard.
 - **Le classement change fortement avec la métrique.** Entre l'accuracy et la balanced accuracy, le stacking passe du rang 1 au rang 9, la forêt aléatoire du rang 2 au rang 8, alors que l'arbre seul passe du rang 10 au rang 3 et que le gradient boosting passe du rang 8 au rang 3. La corrélation de Kendall entre les classements selon l'accuracy et la balanced accuracy est de −0,05 : ce sont deux classements quasiment indépendants. Les classements selon la balanced accuracy et le F1 sont, eux, très proches (0,93).
@@ -140,7 +140,7 @@ Le test de Friedman rejette l'équivalence des 10 méthodes pour les quatre mét
 
 **Protocole.** Les expériences utilisent les mêmes méthodes et réglages qu'en 2.3 (200 arbres ou tours). (a) *Bruit* : sur 6 jeux réels équilibrés (australian, german, iono, pima, vehicle, wdbc, 10 découpages 70/30 chacun), j'inverse au hasard 0, 5, 10 ou 20 % des étiquettes d'**entraînement** ; l'erreur est mesurée sur un test aux étiquettes propres. Je me limite aux jeux équilibrés pour que l'effet du bruit ne se mélange pas à celui du déséquilibre. (b) *Profondeur* : bagging et AdaBoost avec des arbres de profondeur 1, 2, 3, 5 (et complets pour le bagging). (c) *Nombre d'arbres* : j'évalue les $k$ premiers arbres d'un même modèle à 200 arbres. (d) *Biais et variance* : sur deux problèmes simulés dont je connais la vraie classe, `additive` (somme de fonctions d'une seule variable, qu'une somme de stumps peut représenter) et `checkerboard` (damier, où la classe dépend d'une *combinaison* de deux variables, qu'aucun stump ne peut capter), j'entraîne 30 modèles sur 30 échantillons indépendants de 500 exemples et je les compare à la vraie classe sur 5 000 points communs. Pour la perte 0-1, le *biais* d'un point vaut 1 si la prédiction majoritaire des 30 modèles est fausse ; la *variance* est la fréquence à laquelle un modèle s'écarte de cette prédiction majoritaire ; l'erreur est égale au biais plus la variance nette (Domingos, 2000).
 
-> **Tableaux 9 à 12** et **Figures 6 à 8**. Source : `results/sensibilite_tables.md` (tableaux S1 à S4) ; `figures/sens_bruit.png`, `figures/sens_courbes.png`, `figures/sens_biais_variance.png`.
+> **Tableaux 9 à 12** et **Figures 6 à 8**. Source : `partie1/results/sensibilite_tables.md` (tableaux S1 à S4) ; `partie1/figures/sens_bruit.png`, `partie1/figures/sens_courbes.png`, `partie1/figures/sens_biais_variance.png`.
 
 - **Sans bruit ajouté, il n'y a pas de gagnant sur ces six jeux** : les ensembles ont tous une erreur comprise entre 12,4 % (forêt aléatoire) et 13,3 % (bagging), contre 18,3 % pour l'arbre seul (Tableau 9). Cela concorde avec l'égalité 7-7 de la section 3.1 (2) sur les jeux équilibrés.
 - **Le bruit pénalise davantage le boosting que le bagging.** Quand on passe de 0 % à 20 % de bruit, l'erreur augmente de +2,91 points pour la forêt aléatoire, +4,17 pour mon bagging, +5,27 pour AdaBoost sur stumps, +8,58 pour le Hist. gradient boosting, +9,88 pour AdaBoost sur profondeur 3 et +12,80 pour l'arbre seul. Sur chacun des six jeux, la hausse de mon bagging est inférieure à celle d'AdaBoost sur profondeur 3 (par exemple +4,8 contre +13,2 points sur iono). Le boosting sur stumps est nettement moins touché que sur profondeur 3 : la sensibilité au bruit augmente avec la capacité des arbres de base.
@@ -159,7 +159,7 @@ Le test de Friedman rejette l'équivalence des 10 méthodes pour les quatre mét
 
 ### 3.3 Coût de calcul
 
-> **Tableau 8.** Temps d'entraînement et de prédiction (un seul cœur). Source : `results/analyse_tables.md`, section 7.
+> **Tableau 8.** Temps d'entraînement et de prédiction (un seul cœur). Source : `partie1/results/analyse_tables.md`, section 7.
 
 La médiane des temps d'entraînement va de 0,001 s (kNN) à 0,41 s (mon bagging) ; sur `bankmarketing`, mon bagging demande 31,6 s, contre 3,4 s pour la forêt aléatoire et 1,8 s pour le Hist. gradient boosting. Ma version du bagging est écrite en Python pur (une boucle sur les arbres) et n'est pas optimisée ; ces temps ne comparent donc pas équitablement les algorithmes, seulement ces implémentations.
 
@@ -175,10 +175,10 @@ La médiane des temps d'entraînement va de 0,001 s (kNN) à 0,41 s (mon bagging
 
 | Élément | Commande | Fichiers produits |
 |---|---|---|
-| Tableau 1, Figure 1 | `python code/datasets.py` | `results/datasets_table.md`, `figures/datasets_minority.png` |
-| Tableau 2, Figure 2 | `python code/verify.py` | `results/verify_tables.md`, `figures/verify_oob.png` |
-| Expériences (résultats bruts) | `python code/run_experiments.py` | `results/exp_raw.csv` |
-| Tableaux 3 à 8, Figures 3 à 5 | `python code/analyse.py` | `results/analyse_tables.md`, `results/analyse_annexe.md`, `figures/cd/`, `figures/rank_by_metric_imbalanced.png` |
-| Tableaux 9 à 12, Figures 6 à 8 | `python code/sensibilite.py` | `results/sensibilite_tables.md`, `figures/sens_bruit.png`, `figures/sens_courbes.png`, `figures/sens_biais_variance.png` |
+| Tableau 1, Figure 1 | `python partie1/code/datasets.py` | `partie1/results/datasets_table.md`, `partie1/figures/datasets_minority.png` |
+| Tableau 2, Figure 2 | `python partie1/code/verify.py` | `partie1/results/verify_tables.md`, `partie1/figures/verify_oob.png` |
+| Expériences (résultats bruts) | `python partie1/code/run_experiments.py` | `partie1/results/exp_raw.csv` |
+| Tableaux 3 à 8, Figures 3 à 5 | `python partie1/code/analyse.py` | `partie1/results/analyse_tables.md`, `partie1/results/analyse_annexe.md`, `partie1/figures/cd/`, `partie1/figures/rank_by_metric_imbalanced.png` |
+| Tableaux 9 à 12, Figures 6 à 8 | `python partie1/code/sensibilite.py` | `partie1/results/sensibilite_tables.md`, `partie1/figures/sens_bruit.png`, `partie1/figures/sens_courbes.png`, `partie1/figures/sens_biais_variance.png` |
 
-Les fichiers à lire pour comprendre le code : `code/ensembles.py` (mes trois implémentations), `code/datasets.py`, `code/run_experiments.py` (le protocole), `code/analyse.py` (l'analyse statistique).
+Les fichiers à lire pour comprendre le code : `partie1/code/ensembles.py` (mes trois implémentations), `partie1/code/datasets.py`, `partie1/code/run_experiments.py` (le protocole), `partie1/code/analyse.py` (l'analyse statistique).

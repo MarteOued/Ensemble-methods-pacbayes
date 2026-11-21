@@ -37,6 +37,8 @@ Usage : python verify.py    (écrit results/verify_tables.md, les tableaux lisib
                               results/verify_*.csv, les données brutes ; figures/verify_oob.png)
 """
 import os
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "code"))   # code fourni par le prof (benchkit.py)
 import warnings
 import numpy as np
 import pandas as pd
@@ -132,7 +134,7 @@ def verdict(s):
 def write_markdown(raw, summary, per_ds, path):
     """Les tableaux du rapport pour cette étape, écrits en Markdown depuis les résultats."""
     n_cas = int(summary["n_cas"].iloc[0])
-    out = [f"# Vérification de mes implémentations contre scikit-learn",
+    out = ["# Vérification de mes implémentations contre scikit-learn",
            f"Moyennes sur {raw.dataset.nunique()} jeux ({', '.join(DATASETS)}) x {N_REP} découpages "
            f"train/test, soit {n_cas} cas par méthode. Mêmes découpages, mêmes graines, mêmes réglages "
            f"pour ma version et celle de scikit-learn ; {N_TREES} arbres / tours.\n",
