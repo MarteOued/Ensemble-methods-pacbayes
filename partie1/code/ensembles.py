@@ -1,27 +1,12 @@
-"""ensembles.py : mes implémentations des méthodes d'ensemble (Partie 1 du sujet)
+"""ensembles.py : mes implémentations du bagging, d'AdaBoost et du stacking (partie 1)
 
-CE QUE DEMANDE LE SUJET
-    Le sujet demande d'implémenter moi-même trois méthodes : le bagging d'arbres avec son erreur
-    out-of-bag, AdaBoost discret (étiquettes dans {-1,+1}, arbres de profondeur donnée) et le
-    stacking (modèles de familles différentes + un méta-modèle entraîné sur des prédictions
-    out-of-fold). Il demande ensuite de vérifier chaque implémentation contre son équivalent
-    scikit-learn.
+Ce que fait le fichier : j'y ai écrit moi-même trois classes, MyBagging (avec l'erreur out-of-bag),
+MyAdaBoost (AdaBoost discret, étiquettes -1/+1) et MyStacking (méta-modèle appris sur des prédictions
+out-of-fold). Je n'utilise de scikit-learn que l'arbre de décision et quelques modèles simples ; la logique
+d'ensemble (bootstraps, poids, plis) est la mienne. Les classes suivent l'interface scikit-learn (fit,
+predict, decision_function) pour passer dans les mêmes boucles que les autres méthodes.
 
-CE QUE J'AI FAIT DANS CE FICHIER
-    J'ai écrit trois classes, MyBagging, MyAdaBoost et MyStacking. Pour les construire, je n'utilise
-    de scikit-learn que l'arbre de décision (et quelques modèles simples pour le stacking). La
-    logique d'ensemble elle-même (les bootstraps, la mise à jour des poids, les plis out-of-fold).
-    Je les ai écrites à la façon de scikit-learn (méthodes fit, predict, decision_function) pour
-    pouvoir les mettre dans les mêmes boucles d'expériences que les autres modèles.
-
-À QUOI ÇA ME SERT ENSUITE
-    - verify.py : je compare mes trois classes aux versions de scikit-learn pour montrer qu'elles
-      sont correctes.
-    - run_experiments.py : je les fais tourner sur les jeux de données avec les autres méthodes
-      (arbre seul, forêt aléatoire, gradient boosting, régression logistique, kNN...).
-    - analyse.py : j'utilise leurs résultats pour répondre aux questions du sujet (gain par rapport
-      à un arbre seul, bagging contre boosting, stacking contre son meilleur membre, jeux
-      déséquilibrés).
+Utilisé par : verify.py (comparaison avec scikit-learn), run_experiments.py (expériences), sensibilite.py.
 """
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin, clone

@@ -1,44 +1,16 @@
 """q3_prior.py : question 3 de la partie 2, l'impact du prior
 
-CE QUE DEMANDE LE SUJET
-    Partie 2, question 3 : « Catégoriel : prior uniforme contre un prior appris sur la partie prior
-    (prior="learned"). Gaussien : N(0, I) contre N(w0, I) avec w0 appris sur la partie prior. Qu'est-ce qui change
-    dans la KL, les certificats et les risques en test ? Pourquoi un prior appris est-il légitime ici ? »
+Sujet : comparer un prior uniforme (catégoriel) ou N(0, I) (gaussien) à un prior appris sur la partie prior ; que
+change-t-il pour la KL, les certificats et les risques ? Pourquoi un prior appris est-il légitime ?
+Ce que fait le fichier : mêmes 6 jeux et mêmes découpages que la question 2. Pour chaque exécution et chaque borne (A, B),
+je lance l'algorithme avec le prior de départ puis avec le prior appris (stumps : posterior de Gibbs sur la partie prior ;
+linéaire : w0 minimisant la borne B sur la partie prior, prior N(w0, I), sigma = 1). Je refais pas à pas run_categorical
+et run_gaussian (vérifiés identiques par assertion) pour lire aussi le prior lui-même, et je compare KL, certificat de
+Seeger, risques de Gibbs et de vote, et le nombre de découpages où le certificat s'améliore.
+Légitimité : le prior est appris sur la partie prior, disjointe de S ; il est donc indépendant de S et les bornes
+restent valables. Le prix : S ne contient que 56 % des données au lieu de 70 %.
 
-CE QUE J'AI FAIT DANS CE FICHIER
-    - Mêmes jeux et mêmes découpages que la question 2 (wdbc, pima, australian, iono, german, spambase ; 10 découpages ;
-      14 % prior, 56 % échantillon S, 30 % test). Pour chaque exécution, je lance les DEUX algorithmes (A et B), avec
-      le prior « de départ » (uniforme sur les stumps ; N(0, I) pour les classifieurs linéaires, sigma = 1) puis avec le
-      prior appris.
-    - Comment le prior est appris (c'est le code fourni, je ne l'ai pas modifié) :
-        * stumps : P est le posterior de Gibbs P(h) proportionnel à exp(-lambda x risque de h sur la partie prior), avec
-          lambda = (taille de la partie prior) / 4 ;
-        * linéaire : w0 est le classifieur qui minimise la borne B sur la partie prior, et le prior est N(w0, I).
-      Dans les deux cas, le prior est appris sur la partie prior UNIQUEMENT : il ne voit jamais l'échantillon S.
-    - Comme à la question 2, je refais pas à pas les fonctions run_categorical et run_gaussian avec les fonctions
-      fournies, pour pouvoir lire aussi le prior lui-même (sa concentration, la norme de w0, la qualité de w0 comme
-      classifieur), et mon script VÉRIFIE par assertion que mes résultats sont identiques à ceux de ces deux fonctions.
-    - Je compare, pour chaque jeu et chaque borne : la KL, le certificat de Seeger, la borne minimisée, les risques de Gibbs
-      et du vote en test, et le nombre de découpages où le certificat s'améliore avec le prior appris.
-
-POURQUOI UN PRIOR APPRIS EST LÉGITIME ICI (ce que je rappellerai dans le rapport)
-    La théorie PAC-bayésienne n'exige pas que le prior soit choisi sans regarder de données : elle exige qu'il soit fixé
-    AVANT de voir l'échantillon S, c'est-à-dire indépendant de S. Ici le prior est appris sur la partie prior, qui est
-    disjointe de S (et du test) : conditionnellement à cette partie, P est une distribution fixée, et les bornes
-    s'appliquent telles quelles. Si le prior avait vu S, la borne ne serait plus valable : la KL ne mesurerait plus
-    « de combien on a changé d'avis grâce à S ». Le prix à payer : seuls 56 % des données servent à apprendre Q et à calculer
-    le certificat, au lieu de 70 % si on n'avait pas besoin d'une partie prior ; un m plus petit augmente la pénalité.
-
-À QUOI ÇA ME SERT
-    Ce sont les tableaux et figures de la question 3 du rapport. Le prior appris sera réutilisé aux questions 4 et 5.
-
-LIMITES QUE J'ASSUME
-    - La partie prior ne fait que 14 % des données (de 49 exemples pour iono à 643 pour spambase) : le prior appris est
-      estimé sur très peu d'exemples, surtout pour iono et wdbc.
-    - Je ne règle ni sigma (fixé à 1) ni le lambda du prior des stumps (fixé par le code fourni).
-    - 10 découpages, 6 jeux : j'indique des tendances et le nombre de découpages où le certificat s'améliore, sans test.
-
-Usage : python q3_prior.py   (écrit partie2/results/q3_*.csv, q3_prior_tables.md et partie2/figures/q3_*.png)
+Usage : python3 q3_prior.py   (écrit partie2/results/q3_*.csv, q3_prior_tables.md et partie2/figures/q3_*.png)
 """
 import os
 import sys

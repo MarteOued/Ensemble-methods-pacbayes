@@ -1,46 +1,16 @@
-"""q2_comparaison.py : question 2 de la partie 2, comparer les deux bornes (A et B) sur des stumps
+"""q2_comparaison.py : question 2 de la partie 2, comparer les bornes A et B sur des stumps
 
-CE QUE DEMANDE LE SUJET
-    Partie 2, question 2 : « Sur wdbc, puis sur au moins cinq autres jeux de données et plusieurs découpages,
-    comparez les deux algorithmes d'apprentissage (run_categorical) : valeur de la borne qu'ils minimisent,
-    certificat de Seeger du posterior qu'ils renvoient, KL, nombre effectif de votants 1/sum Q(h)^2, risque en test
-    du classifieur de Gibbs et du vote. Les deux bornes conduisent-elles au même posterior ? Quel certificat
-    reporteriez-vous, et pourquoi ? Pour la borne A, tracez la borne, la KL et les risques en test en fonction de
-    lambda (deuxième sortie de learn_linear_categorical). »
+Sujet : sur wdbc puis au moins 5 autres jeux, comparer les deux algorithmes (bornes minimisées, certificat de Seeger,
+KL, nombre effectif de votants, risques en test), dire s'ils donnent le même posterior et quel certificat reporter ;
+tracer, pour A, la borne, la KL et les risques en fonction de lambda.
+Ce que fait le fichier : sur 6 jeux équilibrés (wdbc, pima, australian, iono, german, spambase) et 10 découpages
+(14 % prior, 56 % échantillon S, 30 % test), prior uniforme, je refais pas à pas run_categorical avec les fonctions
+fournies pour récupérer les posteriors Q_A et Q_B (mon script vérifie par assertion que c'est identique à
+run_categorical). Je les compare (distance en variation totale, recouvrement, votants effectifs), je calcule les
+certificats de Seeger et je les confronte au risque de Gibbs mesuré sur le test.
+Limites assumées : 10 découpages et 6 jeux (tendances) ; la partie prior ne fait que 14 % des données.
 
-CE QUE J'AI FAIT DANS CE FICHIER
-    - Jeux : wdbc, pima, australian, iono, german, spambase. Je les ai choisis équilibrés (de 30 à 45 % de
-      minorité) et de tailles et dimensions variées (de 351 à 4 597 exemples, de 8 à 57 variables). J'ai écarté
-      les jeux déséquilibrés : une borne sur le risque 0-1 y favorise le classifieur « toujours majoritaire ».
-    - Découpages : 10 par jeu (graines 0 à 9 de la fonction split fournie : 14 % prior, 56 % échantillon S, 30 % test).
-      Prior uniforme (le prior appris est étudié à la question 3). Pas de standardisation : un stump ne dépend pas
-      de l'échelle des variables.
-    - Pour comparer les POSTERIORS (et pas seulement leurs risques), il me faut les distributions Q, que
-      run_categorical ne renvoie pas. J'ai donc refait pas à pas ce que fait run_categorical, avec les fonctions
-      fournies (split, make_stumps, stump_votes, voter_risks, learn_linear_categorical,
-      learn_mcallester_categorical), et mon script VÉRIFIE que mes résultats sont identiques à ceux de
-      run_categorical (assertion sur plusieurs jeux et découpages).
-    - Même posterior ? Je compare Q_A et Q_B par : la distance en variation totale (0 = identiques, 1 = supports
-      disjoints), le recouvrement somme_h min(Q_A(h), Q_B(h)), le fait que le stump de poids maximal soit le même
-      (ou porte sur la même variable), et le nombre effectif de votants de chacun.
-    - Quel certificat reporter ? Je calcule, pour chaque posterior renvoyé, le certificat de Seeger (le plus serré,
-      question 1) et la borne qu'il minimise. Je vérifie que les certificats sont bien supérieurs au risque de
-      Gibbs mesuré sur le test (ils doivent l'être avec probabilité 95 %), et je mesure l'écart.
-    - Pour la borne A : borne, certificat, KL, nombre effectif de votants et risques en test en fonction de
-      lambda (les 15 valeurs de la grille), moyennés sur les 10 découpages.
-
-À QUOI ÇA ME SERT
-    Ce sont les tableaux et figures de la question 2 du rapport. Les posteriors comparés ici (prior uniforme) servent
-    aussi de point de départ aux questions 3 (prior appris), 4 (autre famille) et 5 (apprentissage classique).
-
-LIMITES QUE J'ASSUME
-    - 10 découpages et 6 jeux : je décris des tendances. Un certificat est valable avec probabilité 95 % : aucune
-      violation sur 60 exécutions ne le « démontre », je constate seulement qu'il n'est jamais pris en défaut.
-    - La partie « prior » ne fait que 14 % des données (79 exemples pour wdbc) : les seuils des stumps sont
-      estimés sur très peu d'exemples.
-    - Les écarts-types sont calculés sur 10 découpages d'un même jeu ; ils ne mesurent pas la variabilité entre jeux.
-
-Usage : python q2_comparaison.py   (écrit partie2/results/q2_*.csv, q2_comparaison_tables.md, partie2/figures/q2_*.png)
+Usage : python3 q2_comparaison.py   (écrit partie2/results/q2_*.csv, q2_comparaison_tables.md, partie2/figures/q2_*.png)
 """
 import os
 import sys

@@ -1,0 +1,19 @@
+% Fichier généré par rapport/build_tables.py : ne pas modifier à la main.
+\begin{table}[tbp]
+\centering
+\small
+\caption{Effet du prior appris (appris $-$ départ), moyennes sur les 60 exécutions par famille et par borne ; une différence négative de KL ou de certificat est une amélioration.}
+\label{tab:q3_global}
+\fitwidth{%
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Famille} & \textbf{Borne} & \textbf{$\Delta$ KL} & \textbf{$\Delta$ certificat de Seeger} & \textbf{Certificat meilleur} & \textbf{$\Delta$ risque de Gibbs} & \textbf{$\Delta$ risque du vote} \\
+\midrule
+Stumps (catégoriel) & A & -3,21 & -0,014 & 60/60 & -0,002 & -0,000 \\
+Stumps (catégoriel) & B & -3,11 & -0,013 & 60/60 & -0,001 & -0,001 \\
+Linéaire (gaussien) & A & -11,82 & -0,049 & 60/60 & -0,014 & -0,002 \\
+Linéaire (gaussien) & B & -11,63 & -0,050 & 60/60 & -0,014 & -0,002 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

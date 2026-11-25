@@ -1,50 +1,16 @@
 """q4_familles.py : question 4 de la partie 2, changer de famille de distributions
 
-CE QUE DEMANDE LE SUJET
-    Partie 2, question 4 : « Distributions catégorielles sur des stumps contre distributions gaussiennes sur des
-    classifieurs linéaires : comparez les certificats, les risques de Gibbs et les votes. Vous pouvez ajouter d'autres
-    posteriors (un Dirac sur le meilleur stump ; uniforme sur les k meilleurs stumps) avec les fonctions fournies.
-    Pourquoi minimiser une borne sur le risque de Gibbs donne-t-il un vote de stumps faible, mais un bon classifieur
-    linéaire ? »
+Sujet : comparer les stumps (distributions catégorielles) et les classifieurs linéaires (gaussiennes) ; ajouter d'autres
+posteriors (Dirac sur le meilleur stump, uniforme sur les k meilleurs) ; expliquer pourquoi minimiser une borne sur le
+risque de Gibbs donne un vote de stumps faible mais un bon classifieur linéaire.
+Ce que fait le fichier : mêmes 6 jeux et découpages, prior appris. Je compare 4 posteriors issus d'une borne (stumps ou
+linéaire, A ou B) et 3 posteriors de stumps construits à la main (Dirac, top 5, top 20) : risque de Gibbs sur S, KL,
+certificat de Seeger, risques de Gibbs et de vote en test. Pour tester l'explication (le risque de Gibbs est linéaire en Q
+et ne récompense pas la diversité des votants), je mesure l'écart Gibbs - vote et une courbe en fonction de k.
+Limites assumées : la convention du code fourni (égalités comptées comme erreurs) crée une petite bosse à k = 2 et rend le
+vote nul pour k = tous les stumps (non tracé) ; le « meilleur k » est un diagnostic, pas une méthode.
 
-CE QUE J'AI FAIT DANS CE FICHIER
-    - Mêmes jeux et découpages que les questions 2 et 3 (wdbc, pima, australian, iono, german, spambase ; 10 découpages)
-      et le PRIOR APPRIS pour les deux familles (il donne les meilleurs certificats, question 3).
-    - Je compare quatre posteriors issus de la minimisation d'une borne (stumps avec A, stumps avec B, linéaire avec A,
-      linéaire avec B) et trois posteriors de stumps que je construis moi-même avec les fonctions fournies :
-        * un Dirac sur le meilleur stump (le stump de plus petit risque sur S) ;
-        * l'uniforme sur les 5 meilleurs stumps ; l'uniforme sur les 20 meilleurs.
-      Pour chacun, je calcule le risque empirique de Gibbs sur S, la KL par rapport au prior appris, le certificat de Seeger
-      (bound_seeger), et les risques de Gibbs et du vote sur le test.
-    - Pour répondre au « pourquoi », je ne veux pas seulement l'affirmer : je le teste. Mon raisonnement est le suivant.
-        (1) Le risque de Gibbs est LINÉAIRE en Q : sum_h Q(h) risque(h). Pour des stumps, le minimiser pousse Q à se
-            concentrer sur les stumps de plus petit risque, jusqu'au Dirac sur le meilleur ; la KL ne freine que peu. À la question 2,
-            j'ai vu que le posterior minimisant A ou B a entre 1 et 4 votants effectifs.
-        (2) Le vote d'un posterior concentré sur un seul stump est ce stump : il n'y a plus de vote. Un vote n'est fort que si
-            ses votants font des erreurs DIFFÉRENTES (de la diversité) ; le risque de Gibbs ne récompense pas cette diversité.
-        (3) Pour des gaussiennes, le posterior est un nuage de classifieurs autour de w ; son vote majoritaire est le classifieur
-            central sign<w, x>, qui moyenne le bruit du nuage : son risque est bien plus petit que celui de Gibbs, et minimiser
-            le risque de Gibbs du nuage revient à bien placer son centre w.
-      Ce que je mesure pour tester cela : (a) l'écart Gibbs - vote pour chaque famille ; (b) une courbe en fonction de k
-      (uniforme sur les k meilleurs stumps, k de 1 à tous les stumps) : si le raisonnement tient, le risque de Gibbs augmente
-      avec k alors que le risque du vote est minimal pour un k intermédiaire, pas pour k = 1.
-    - Je vérifie par assertion que mes posteriors A et B de stumps, avec le prior appris, sont identiques à ceux de
-      run_categorical.
-
-À QUOI ÇA ME SERT
-    Ce sont les tableaux et figures de la question 4 du rapport, et un fondement pour la question 5 (apprentissage classique
-    contre minimisation de borne).
-
-LIMITES QUE J'ASSUME
-    - Pour k = tous les stumps, le vote uniforme est toujours nul (les stumps vont par paires opposées h et -h) et le code fourni
-      compte les égalités comme des erreurs : je ne trace pas ce vote. Plus généralement vote_risk compte les égalités comme des
-      erreurs, ce qui pénalise les k PAIRS (petite bosse à k = 2 sur les courbes) ; c'est une convention du code fourni.
-    - Je ne fais qu'un seul choix de k pour les tableaux (1, 5, 20) ; la courbe en k couvre le reste.
-    - Je ne règle ni sigma ni les paramètres des priors ; 10 découpages, 6 jeux : des tendances.
-    - Un « meilleur k » trouvé en regardant le test est un diagnostic pour comprendre, pas une méthode : je ne le propose pas
-      comme algorithme (le choisir demanderait de l'estimer sur des données indépendantes).
-
-Usage : python q4_familles.py   (écrit partie2/results/q4_*.csv, q4_familles_tables.md et partie2/figures/q4_*.png)
+Usage : python3 q4_familles.py   (écrit partie2/results/q4_*.csv, q4_familles_tables.md et partie2/figures/q4_*.png)
 """
 import os
 import sys

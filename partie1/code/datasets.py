@@ -1,35 +1,13 @@
-"""datasets.py : les jeux de données que j'utilise, leur description et leur classement (équilibré / déséquilibré)
+"""datasets.py : les jeux de données utilisés, leur description et le seuil de déséquilibre
 
-CE QUE DEMANDE LE SUJET
-    Partie 1, « Jeux de données » : utiliser au moins 15 jeux parmi ceux du cours, les décrire dans un
-    tableau (nombre d'exemples m, dimension d, proportion de la classe minoritaire), et indiquer le
-    seuil à partir duquel je qualifie un jeu de déséquilibré. Le sujet précise aussi que le choix de
-    la métrique dépend de la nature du jeu (équilibré ou non), et cite yeast3, libras, satimage,
-    pageblocks et abalone8 comme fortement déséquilibrés.
+Sujet : au moins 15 jeux, décrits dans un tableau (m, d, proportion de la classe minoritaire), avec un seuil
+de déséquilibre.
+Ce que fait le fichier : je fixe ici mes 25 jeux (les 22 de bk.REAL_SMALL / REAL_LARGE + yeast6, wine4, abalone17)
+et mon seuil (déséquilibré = classe minoritaire < 15 %), puis je calcule m, d et la part de minorité, et j'écris
+le tableau (Markdown, CSV) et une figure. Les autres scripts importent DATASETS et is_imbalanced d'ici, pour que
+ces choix ne soient écrits qu'à un seul endroit. La justification du seuil et des jeux écartés est dans le rapport.
 
-CE QUE J'AI FAIT DANS CE FICHIER
-    - J'ai fixé la liste de mes 25 jeux : les 22 de bk.REAL_SMALL et bk.REAL_LARGE, plus trois jeux que
-      prepdata.py sait charger mais qui ne figurent pas dans ces listes (yeast6, wine4, abalone17).
-      Je les ai ajoutés parce qu'ils sont beaucoup plus déséquilibrés (entre 1,4 % et 3,3 % de
-      minorité), donc plus parlants pour étudier l'effet du déséquilibre. J'ai écarté abalone20
-      (26 positifs seulement) et hayes (132 exemples) : trop petits pour des résultats fiables.
-    - J'ai fixé le seuil : un jeu est déséquilibré si sa classe minoritaire représente moins de 15 %
-      des exemples. Ce seuil est conventionnel. Je l'ai choisi parce qu'il classe comme déséquilibrés
-      les cinq jeux cités par le sujet, et parce qu'aucun jeu ne se trouve entre 14,3 % (segmentation)
-      et 23,5 % (vehicle) : tout seuil dans cet intervalle donne exactement la même partition.
-    - Je calcule m, d, la proportion de minorité, et aussi le nombre absolu d'exemples minoritaires
-      et celui attendu dans un test à 30 %. Ce dernier chiffre me sert à savoir quels jeux donneront
-      des résultats très bruités (par exemple abalone17 : seulement 17 positifs dans le test).
-    - Je génère le tableau du rapport (en Markdown) et une figure des proportions de minorité.
-
-À QUOI ÇA ME SERT ENSUITE
-    run_experiments.py et analyse.py importent d'ici la liste des jeux (DATASETS), le seuil et la
-    fonction is_imbalanced : je ne recopie jamais ces choix ailleurs. Le groupe d'un jeu décide aussi
-    de la métrique que je mets en avant : accuracy et AUC pour un jeu équilibré ; balanced accuracy,
-    F1 de la classe minoritaire et AUC pour un jeu déséquilibré.
-
-Usage : python datasets.py   (écrit results/datasets_table.md, results/datasets_table.csv et
-                              figures/datasets_minority.png)
+Usage : python3 datasets.py   (écrit results/datasets_table.md/.csv et figures/datasets_minority.png)
 """
 import os
 import sys

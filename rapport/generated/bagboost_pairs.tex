@@ -1,0 +1,20 @@
+% Fichier généré par rapport/build_tables.py : ne pas modifier à la main.
+\begin{table}[tbp]
+\centering
+\scriptsize
+\caption{Bagging contre boosting : différence d'accuracy sur 25 jeux et de balanced accuracy sur 10 jeux déséquilibrés (première méthode moins seconde, en points), victoires/égalités/défaites de la première, p-valeur de Wilcoxon corrigée par Holm.}
+\label{tab:bagboost_pairs}
+\fitwidth{%
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Comparaison} & \textbf{$\Delta$ acc.} & \textbf{G/N/P acc.} & \textbf{p acc.} & \textbf{$\Delta$ bal. acc.} & \textbf{G/N/P bal. acc.} & \textbf{p bal. acc.} \\
+\midrule
+Bagging (le mien) - AdaBoost stumps (le mien) & -0,65 & 10/0/15 & 0,937 & -0,29 & 6/0/4 & 1,000 \\
+Bagging (le mien) - AdaBoost prof. 3 (le mien) & -0,57 & 12/0/13 & 0,937 & -0,99 & 4/0/6 & 1,000 \\
+Forêt aléatoire - Gradient boosting & +0,57 & 20/0/5 & 0,014 & -1,60 & 2/0/8 & 0,082 \\
+Forêt aléatoire - Hist. gradient boosting & +0,55 & 14/0/11 & 0,921 & -3,93 & 0/0/10 & 0,010 \\
+Forêt aléatoire - AdaBoost prof. 3 (le mien) & +0,39 & 16/0/9 & 0,937 & -2,22 & 2/0/8 & 0,078 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

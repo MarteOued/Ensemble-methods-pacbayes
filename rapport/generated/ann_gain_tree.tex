@@ -1,0 +1,22 @@
+% Fichier généré par rapport/build_tables.py : ne pas modifier à la main.
+\begin{table}[tbp]
+\centering
+\scriptsize
+\caption{Gain des ensembles par rapport à l'arbre seul : différence moyenne (points), victoires/égalités/défaites (G/N/P) et p-valeur de Wilcoxon corrigée par Holm, pour l'accuracy (25 jeux), la balanced accuracy (10 jeux déséquilibrés) et l'AUC (25 jeux).}
+\label{tab:ann_gain_tree}
+\fitwidth{%
+\begin{tabular}{lccccccccc}
+\toprule
+\textbf{Méthode} & \textbf{$\Delta$ acc.} & \textbf{G/N/P acc.} & \textbf{p acc.} & \textbf{$\Delta$ bal. acc.} & \textbf{G/N/P bal. acc.} & \textbf{p bal. acc.} & \textbf{$\Delta$ AUC} & \textbf{G/N/P AUC} & \textbf{p AUC} \\
+\midrule
+Bagging (le mien) & +3,85 & 25/0/0 & < 0,001 & -0,52 & 6/0/4 & 1,000 & +13,95 & 25/0/0 & < 0,001 \\
+Forêt aléatoire & +4,82 & 25/0/0 & < 0,001 & -1,75 & 4/0/6 & 1,000 & +15,13 & 25/0/0 & < 0,001 \\
+AdaBoost stumps (le mien) & +4,50 & 23/0/2 & < 0,001 & -0,23 & 3/0/7 & 1,000 & +13,92 & 25/0/0 & < 0,001 \\
+AdaBoost prof. 3 (le mien) & +4,42 & 25/0/0 & < 0,001 & +0,46 & 6/0/4 & 1,000 & +13,89 & 25/0/0 & < 0,001 \\
+Gradient boosting & +4,25 & 25/0/0 & < 0,001 & -0,15 & 6/0/4 & 1,000 & +13,79 & 25/0/0 & < 0,001 \\
+Hist. gradient boosting & +4,26 & 25/0/0 & < 0,001 & +2,18 & 7/0/3 & 1,000 & +13,85 & 25/0/0 & < 0,001 \\
+Stacking (le mien) & +4,32 & 25/0/0 & < 0,001 & -1,24 & 3/0/7 & 1,000 & +13,93 & 25/0/0 & < 0,001 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

@@ -1,0 +1,26 @@
+% Fichier généré par rapport/build_tables.py : ne pas modifier à la main.
+\begin{table}[tbp]
+\centering
+\small
+\caption{Rangs moyens des 10 méthodes sur les 25 jeux, pour chaque métrique (1 = meilleur ; en gras, le meilleur). Dernière ligne : p-valeur du test de Friedman. Différence critique de Nemenyi : CD = 2,71.}
+\label{tab:ranks_all}
+\fitwidth{%
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Méthode} & \textbf{Accuracy} & \textbf{Balanced accuracy} & \textbf{F1 (minorité)} & \textbf{AUC} \\
+\midrule
+Arbre seul & 9,36 & 7,44 & 7,64 & 9,88 \\
+Régression logistique & 5,64 & 6,72 & 6,62 & 5,32 \\
+kNN (k=7) & 6,90 & 7,32 & 7,26 & 7,80 \\
+Bagging (le mien) & 5,50 & 5,24 & 5,40 & 5,72 \\
+Forêt aléatoire & \textbf{3,48} & 4,52 & 4,50 & \textbf{3,08} \\
+AdaBoost stumps (le mien) & 5,04 & 5,12 & 5,12 & 5,12 \\
+AdaBoost prof. 3 (le mien) & 4,98 & 4,36 & 4,56 & 4,36 \\
+Gradient boosting & 5,38 & 4,76 & 4,64 & 5,00 \\
+Hist. gradient boosting & 4,70 & \textbf{3,92} & \textbf{3,76} & 4,22 \\
+Stacking (le mien) & 4,02 & 5,60 & 5,50 & 4,50 \\
+\textit{p de Friedman} & < 0,001 & < 0,001 & < 0,001 & < 0,001 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

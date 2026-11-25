@@ -1,49 +1,19 @@
 """sensibilite.py : pourquoi le bagging ou le boosting l'emporte-t-il ? (question 2 de la partie 1)
 
-CE QUE DEMANDE LE SUJET
-    Partie 1, Analyse : « Bagging ou boosting : sur quels jeux de données chacun l'emporte-t-il, et pourquoi
-    (taille du jeu de données, bruit, profondeur des arbres de base, biais et variance) ? »
-    Mes résultats sur les jeux réels (analyse.py) disent SUR QUELS jeux chacun gagne, et montrent l'effet de
-    la taille. Mais sur des jeux réels je ne contrôle ni le bruit, ni la structure du problème : je ne peux
-    donc pas isoler la profondeur, le bruit, le biais ni la variance. Ce fichier fait des expériences où je
-    change UNE seule chose à la fois.
+Sujet : « Bagging ou boosting : sur quels jeux chacun l'emporte-t-il, et pourquoi (taille, bruit, profondeur,
+biais et variance) ? » Sur des jeux réels je ne contrôle pas ces facteurs ; ici je change une seule chose à la fois.
+Ce que fait le fichier : quatre petites expériences, avec les méthodes de run_experiments.py :
+  1. bruit : j'inverse 0, 5, 10, 20 % des étiquettes d'entraînement sur 6 jeux équilibrés ;
+  2. profondeur : AdaBoost et bagging avec des arbres de profondeur croissante, avec et sans bruit ;
+  3. nombre d'arbres : courbes d'erreur de test en fonction du nombre d'arbres ou de tours ;
+  4. biais et variance (décomposition de Domingos, perte 0-1) sur deux jeux simulés dont je connais la vraie
+     réponse : additif (bk.additive) et damier (bk.checkerboard).
+Il écrit results/sensibilite_tables.md, les CSV et les figures sens_*.png.
+Limites assumées : 6 jeux réels (tendances, pas de test), deux jeux simulés extrêmes, bruit symétrique seulement.
 
-CE QUE J'AI FAIT DANS CE FICHIER
-    Quatre petites expériences. Les méthodes et leurs réglages sont ceux de run_experiments.py (200 arbres).
-    1. Le bruit. Sur 6 jeux réels équilibrés (wdbc, pima, australian, iono, german, vehicle), j'inverse
-       au hasard 0, 5, 10 ou 20 % des étiquettes d'ENTRAÎNEMENT (bk.flip_labels) ; l'erreur est mesurée sur
-       un test aux étiquettes propres. Je regarde quelle méthode se dégrade le plus. Je me restreins aux jeux
-       équilibrés pour que l'effet du bruit ne se mélange pas à celui du déséquilibre.
-    2. La profondeur. Sur les mêmes jeux, AdaBoost avec des arbres de profondeur 1, 2, 3, 5, et le bagging
-       avec des arbres de profondeur 1, 2, 3, 5 et complets, avec 0 % et 20 % de bruit.
-    3. Le nombre d'arbres. L'erreur de test du bagging (en fonction du nombre d'arbres) et d'AdaBoost (en
-       fonction du nombre de tours), avec 0 % et 20 % de bruit. Je les obtiens gratuitement en évaluant les
-       k premiers arbres d'un même modèle à 200 arbres.
-    4. Biais et variance sur des jeux simulés dont je connais la vraie réponse (bk.additive : somme de
-       fonctions d'une seule variable, qu'une somme de stumps peut représenter ; bk.checkerboard : damier,
-       où la classe ne dépend que d'une COMBINAISON de variables, qu'aucun stump ne peut capter). Pour chaque
-       méthode j'entraîne 30 modèles sur 30 échantillons indépendants de 500 exemples, et je compare leurs
-       prédictions à la vraie classe sur un grand test commun (5 000 exemples). Selon la décomposition de
-       Domingos pour la perte 0-1 : le BIAIS d'un point est 1 si la prédiction majoritaire des 30 modèles est
-       fausse ; la VARIANCE est la fréquence à laquelle un modèle diffère de cette prédiction majoritaire ;
-       l'erreur vaut biais + variance nette, avec variance nette = moyenne de (1 - 2 biais) x variance
-       (une variance « aide » quand la prédiction majoritaire est fausse). Je ne l'applique qu'à des
-       problèmes déterministes (sans bruit propre), pour que cette identité soit exacte.
-
-À QUOI ÇA ME SERT
-    Remplacer, dans la question 2 du rapport, mes hypothèses par des résultats observés : dire par exemple
-    « avec 20 % de bruit, l'erreur d'AdaBoost augmente de X points contre Y pour le bagging », ou « sur le
-    damier, AdaBoost sur stumps a un biais de Z parce qu'une somme de stumps ne représente pas une interaction ».
-
-LIMITES QUE J'ASSUME
-    - Seulement 6 jeux réels : je décris des tendances, je ne fais pas de test statistique sur 6 points.
-    - Les jeux simulés sont deux exemples extrêmes (parfaitement additif, parfaitement interactif), pas des
-      jeux réalistes ; ils servent à illustrer le mécanisme.
-    - Je teste du bruit symétrique sur les étiquettes seulement.
-
-Usage : python sensibilite.py            (calcule puis écrit les tableaux et figures)
-        python sensibilite.py --skip-run (refait seulement tableaux et figures à partir des CSV)
-        python sensibilite.py --n-rep 2 --R 4 --out-tag test   (test rapide, fichiers séparés)
+Usage : python3 sensibilite.py            (calcule puis écrit tableaux et figures)
+        python3 sensibilite.py --skip-run (refait seulement tableaux et figures à partir des CSV)
+        python3 sensibilite.py --n-rep 2 --R 4 --out-tag test   (test rapide)
 """
 import os
 import sys

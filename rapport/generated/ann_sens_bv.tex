@@ -1,0 +1,39 @@
+% Fichier généré par rapport/build_tables.py : ne pas modifier à la main.
+\begin{table}[tbp]
+\centering
+\scriptsize
+\caption{Biais et variance sur jeux simulés (\%).}
+\label{tab:ann_sens_bv}
+\fitwidth{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Jeu simulé} & \textbf{Bruit} & \textbf{Méthode} & \textbf{Erreur} & \textbf{Biais} & \textbf{Variance nette} \\
+\midrule
+additive & 0 \% & Arbre seul & 12,91 & 7,22 & 5,69 \\
+additive & 0 \% & Bagging (le mien) & 9,76 & 8,20 & 1,56 \\
+additive & 0 \% & Forêt aléatoire & 9,06 & 7,78 & 1,28 \\
+additive & 0 \% & AdaBoost stumps (le mien) & 5,77 & 2,94 & 2,83 \\
+additive & 0 \% & AdaBoost prof. 3 (le mien) & 7,67 & 4,56 & 3,11 \\
+additive & 0 \% & Hist. gradient boosting & 7,64 & 4,74 & 2,90 \\
+additive & 20 \% & Arbre seul & 29,19 & 9,12 & 20,07 \\
+additive & 20 \% & Bagging (le mien) & 15,59 & 8,58 & 7,01 \\
+additive & 20 \% & Forêt aléatoire & 14,30 & 8,20 & 6,10 \\
+additive & 20 \% & AdaBoost stumps (le mien) & 17,99 & 7,12 & 10,87 \\
+additive & 20 \% & AdaBoost prof. 3 (le mien) & 23,43 & 7,88 & 15,55 \\
+additive & 20 \% & Hist. gradient boosting & 19,99 & 7,08 & 12,91 \\
+checkerboard & 0 \% & Arbre seul & 4,86 & 0,64 & 4,22 \\
+checkerboard & 0 \% & Bagging (le mien) & 3,20 & 0,56 & 2,64 \\
+checkerboard & 0 \% & Forêt aléatoire & 5,73 & 0,92 & 4,81 \\
+checkerboard & 0 \% & AdaBoost stumps (le mien) & 49,78 & 48,02 & 1,76 \\
+checkerboard & 0 \% & AdaBoost prof. 3 (le mien) & 4,05 & 0,78 & 3,27 \\
+checkerboard & 0 \% & Hist. gradient boosting & 3,71 & 1,48 & 2,23 \\
+checkerboard & 20 \% & Arbre seul & 26,67 & 2,80 & 23,87 \\
+checkerboard & 20 \% & Bagging (le mien) & 18,69 & 2,20 & 16,49 \\
+checkerboard & 20 \% & Forêt aléatoire & 20,97 & 2,78 & 18,19 \\
+checkerboard & 20 \% & AdaBoost stumps (le mien) & 49,56 & 46,46 & 3,10 \\
+checkerboard & 20 \% & AdaBoost prof. 3 (le mien) & 30,56 & 10,88 & 19,68 \\
+checkerboard & 20 \% & Hist. gradient boosting & 19,58 & 3,24 & 16,34 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

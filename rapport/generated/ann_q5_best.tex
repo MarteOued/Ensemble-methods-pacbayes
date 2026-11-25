@@ -1,0 +1,21 @@
+% Fichier généré par rapport/build_tables.py : ne pas modifier à la main.
+\begin{table}[tbp]
+\centering
+\scriptsize
+\caption{Question 5 : meilleure méthode de chaque approche, par jeu (choisie sur le test).}
+\label{tab:ann_q5_best}
+\fitwidth{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Jeu} & \textbf{Meilleur classique} & \textbf{Erreur} & \textbf{Meilleur PAC-Bayes} & \textbf{Erreur} & \textbf{Écart (PAC-Bayes - classique, points)} \\
+\midrule
+wdbc & Régression logistique & 0,030 & PAC-Bayes linéaire, B & 0,034 & 0,4 \\
+pima & Forêt aléatoire & 0,239 & PAC-Bayes linéaire, B & 0,243 & 0,4 \\
+australian & Forêt aléatoire & 0,133 & PAC-Bayes linéaire, A & 0,139 & 0,5 \\
+iono & Forêt aléatoire & 0,068 & PAC-Bayes linéaire, A & 0,126 & 5,8 \\
+german & Régression logistique & 0,239 & PAC-Bayes linéaire, B & 0,246 & 0,8 \\
+spambase & Forêt aléatoire & 0,050 & PAC-Bayes linéaire, B & 0,082 & 3,2 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

@@ -1,0 +1,26 @@
+% Fichier généré par rapport/build_tables.py : ne pas modifier à la main.
+\begin{table}[tbp]
+\centering
+\small
+\caption{Rangs moyens sur les 15 jeux équilibrés (CD = 3,50).}
+\label{tab:ann_ranks_bal}
+\fitwidth{%
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Méthode} & \textbf{Accuracy} & \textbf{Balanced accuracy} & \textbf{F1 (minorité)} & \textbf{AUC} \\
+\midrule
+Arbre seul & 9,33 & 9,13 & 9,07 & 9,80 \\
+Régression logistique & 5,07 & 5,47 & 5,53 & 5,27 \\
+kNN (k=7) & 8,07 & 8,13 & 8,20 & 7,60 \\
+Bagging (le mien) & 5,77 & 5,40 & 5,67 & 5,80 \\
+Forêt aléatoire & \textbf{3,20} & \textbf{3,40} & \textbf{3,47} & \textbf{3,27} \\
+AdaBoost stumps (le mien) & 4,73 & 4,47 & 4,53 & 4,80 \\
+AdaBoost prof. 3 (le mien) & 4,90 & 4,67 & 4,67 & 4,67 \\
+Gradient boosting & 4,83 & 4,67 & 4,53 & 5,07 \\
+Hist. gradient boosting & 4,93 & 4,73 & 4,47 & 4,23 \\
+Stacking (le mien) & 4,17 & 4,93 & 4,87 & 4,50 \\
+\textit{p de Friedman} & < 0,001 & < 0,001 & < 0,001 & < 0,001 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

@@ -1,0 +1,40 @@
+% Fichier généré par rapport/build_tables.py : ne pas modifier à la main.
+\begin{table}[tbp]
+\centering
+\scriptsize
+\caption{Meilleur du type bagging (bagging, forêt aléatoire) contre meilleur du type boosting, par jeu (métrique mise en avant, en \%).}
+\label{tab:ann_bagboost_ds}
+\fitwidth{%
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Jeu} & \textbf{m} & \textbf{d} & \textbf{Minorité (\%)} & \textbf{Meilleur bagging (\%)} & \textbf{Meilleur boosting (\%)} & \textbf{Boosting - bagging (pts)} & \textbf{Vainqueur} \\
+\midrule
+wine & 178 & 13 & 33,1 & 98,7 (Forêt aléatoire) & 98,1 (Hist. gradient boosting) & -0,56 & bagging \\
+sonar & 208 & 60 & 46,6 & 82,5 (Forêt aléatoire) & 85,4 (AdaBoost prof. 3 (le mien)) & +2,86 & boosting \\
+glass & 214 & 9 & 32,7 & 86,0 (Forêt aléatoire) & 87,4 (AdaBoost prof. 3 (le mien)) & +1,38 & boosting \\
+newthyroid & 215 & 5 & 30,2 & 95,8 (Forêt aléatoire) & 95,2 (AdaBoost stumps (le mien)) & -0,62 & bagging \\
+heart & 270 & 13 & 44,4 & 82,6 (Forêt aléatoire) & 79,3 (AdaBoost stumps (le mien)) & -3,33 & bagging \\
+bupa & 345 & 6 & 42,0 & 73,8 (Forêt aléatoire) & 72,4 (AdaBoost stumps (le mien)) & -1,35 & bagging \\
+iono & 351 & 34 & 35,9 & 93,4 (Forêt aléatoire) & 92,8 (Gradient boosting) & -0,57 & bagging \\
+libras & 360 & 90 & 6,7 & 68,6 (Forêt aléatoire) & 85,6 (Hist. gradient boosting) & +17,04 & boosting \\
+wdbc & 569 & 30 & 37,3 & 95,5 (Forêt aléatoire) & 96,5 (AdaBoost prof. 3 (le mien)) & +0,99 & boosting \\
+balance & 625 & 4 & 46,1 & 87,9 (Forêt aléatoire) & 98,2 (AdaBoost stumps (le mien)) & +10,32 & boosting \\
+australian & 690 & 14 & 44,5 & 87,6 (Forêt aléatoire) & 86,7 (Gradient boosting) & -0,87 & bagging \\
+pima & 768 & 8 & 34,9 & 76,7 (Bagging (le mien)) & 77,0 (AdaBoost stumps (le mien)) & +0,30 & boosting \\
+vehicle & 846 & 18 & 23,5 & 96,3 (Forêt aléatoire) & 97,8 (AdaBoost prof. 3 (le mien)) & +1,46 & boosting \\
+german & 1000 & 24 & 30,0 & 76,2 (Bagging (le mien)) & 76,2 (Gradient boosting) & +0,00 & égalité \\
+yeast6 & 1484 & 8 & 2,4 & 73,4 (Bagging (le mien)) & 75,6 (AdaBoost stumps (le mien)) & +2,18 & boosting \\
+yeast3 & 1484 & 8 & 11,0 & 87,0 (Bagging (le mien)) & 88,8 (AdaBoost stumps (le mien)) & +1,81 & boosting \\
+wine4 & 1599 & 11 & 3,3 & 50,5 (Bagging (le mien)) & 51,3 (Gradient boosting) & +0,77 & boosting \\
+segmentation & 2310 & 19 & 14,3 & 94,9 (Forêt aléatoire) & 96,9 (AdaBoost prof. 3 (le mien)) & +2,00 & boosting \\
+splice & 3175 & 60 & 48,1 & 97,1 (Forêt aléatoire) & 97,1 (Gradient boosting) & -0,03 & bagging \\
+abalone17 & 4177 & 10 & 1,4 & 50,0 (Forêt aléatoire) & 51,1 (Hist. gradient boosting) & +1,05 & boosting \\
+abalone8 & 4177 & 10 & 13,6 & 53,6 (Forêt aléatoire) & 55,5 (Hist. gradient boosting) & +1,86 & boosting \\
+spambase & 4597 & 57 & 39,4 & 95,1 (Forêt aléatoire) & 95,6 (Hist. gradient boosting) & +0,46 & boosting \\
+pageblocks & 5473 & 10 & 10,2 & 92,5 (Forêt aléatoire) & 92,8 (Hist. gradient boosting) & +0,24 & boosting \\
+satimage & 6435 & 36 & 9,7 & 74,7 (Bagging (le mien)) & 79,8 (Hist. gradient boosting) & +5,06 & boosting \\
+bankmarketing & 45211 & 51 & 11,7 & 72,2 (Bagging (le mien)) & 73,0 (Hist. gradient boosting) & +0,73 & boosting \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

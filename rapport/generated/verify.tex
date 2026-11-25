@@ -1,0 +1,19 @@
+% Fichier généré par rapport/build_tables.py : ne pas modifier à la main.
+\begin{table}[tbp]
+\centering
+\scriptsize
+\caption{Vérification de mes implémentations contre scikit-learn (6 jeux $\times$ 10 découpages, 60 cas par méthode). \og Accord\fg{} : part des exemples de test où les deux versions prédisent la même classe ; \og Accord réf.\fg{} : même mesure entre scikit-learn et lui-même avec une autre graine.}
+\label{tab:verify}
+\fitwidth{%
+\begin{tabular}{lcccc p{5.4cm}}
+\toprule
+\textbf{Méthode} & \textbf{Erreur moi} & \textbf{Erreur sklearn} & \textbf{Accord} & \textbf{Accord réf.} & \textbf{Verdict} \\
+\midrule
+Bagging (arbres complets) & 13,30 \% & 13,17 \% & 98,02 \% & 98,10 \% & proche, écart du même ordre que sklearn contre lui-même \\
+AdaBoost, stumps & 13,25 \% & 13,25 \% & 100,00 \% & 100,00 \% & identique \\
+AdaBoost, profondeur 3 & 13,65 \% & 13,71 \% & 99,16 \% & 99,49 \% & proche, écart du même ordre que sklearn contre lui-même \\
+Stacking & 12,59 \% & 12,59 \% & 100,00 \% & -- & identique \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

@@ -1,42 +1,14 @@
-"""q1_bornes.py : question 1 de la partie 2, comparer les trois bornes PAC-bayésiennes avec leurs formules
+"""q1_bornes.py : question 1 de la partie 2, comparer les trois bornes PAC-bayésiennes
 
-CE QUE DEMANDE LE SUJET
-    Partie 2, question 1 : « À l'aide des trois fonctions bound_*, tracez les bornes en fonction de m (pour un
-    risque observé de 0,1 et quelques valeurs de la KL) et de la KL (pour quelques m). Quelle borne est la plus
-    serrée ? Comment la borne A dépend-elle de lambda, et quel est le prix de la grille ? Reliez ce que vous
-    observez aux formules. »
+Sujet : tracer les bornes A (linéaire/Catoni), B (McAllester) et Seeger en fonction de m et de la KL, dire laquelle
+est la plus serrée, comment A dépend de lambda et quel est le prix de la grille.
+Ce que fait le fichier : sans aucune donnée, j'appelle les fonctions fournies (code/pacbayes_tools.py) avec delta = 0,05,
+un risque observé de 0,1 et la grille de lambda du sujet (15 valeurs). Je trace les bornes en fonction de m et de la KL,
+la borne A en fonction de lambda (courbe en U), et je mesure le prix de la grille (coût de l'union + discrétisation).
+Deux relations théoriques sont vérifiées par assertions : Seeger <= McAllester (Pinsker) et
+lambda* = racine(8m(KL + ln(|grille|/delta))).
 
-CE QUE J'AI FAIT DANS CE FICHIER
-    Je n'utilise aucune donnée : seulement les trois fonctions bound_linear (A), bound_mcallester (B) et
-    bound_seeger du fichier fourni (code/pacbayes_tools.py), avec delta = 0,05 et la grille de lambda du sujet
-    (1, 2, 4, ..., 16384, soit 15 valeurs). Les bornes ne dépendent que de quatre nombres : le risque observé,
-    la KL, la taille m de l'échantillon et delta ; je peux donc les comparer sans rien apprendre.
-    - Bornes en fonction de m (risque observé 0,1 ; KL = 1, 5, 20, 50) et de la KL (m = 100, 500, 1000, 10000).
-      Pour la borne A, je prends le meilleur lambda de la grille, c'est ce que fait l'algorithme fourni.
-    - Borne A en fonction de lambda : on voit une courbe en U, parce que lambda apparaît dans (KL + ln(|grille|/delta)) / lambda
-      (qui diminue quand lambda augmente) et dans lambda / (8m) (qui augmente).
-    - Le prix de la grille. Pour une valeur fixée de lambda, la borne A est valable avec probabilité 1 - delta.
-      Mais on choisit lambda APRÈS avoir vu les données (le meilleur de la grille) : pour que la borne reste
-      valable, on fait une borne de l'union sur les |grille| = 15 valeurs, ce qui remplace ln(1/delta) par
-      ln(|grille|/delta). Je mesure ce prix, et je le sépare en deux : le coût de l'union (ln 15 en plus) et le
-      coût de la discrétisation (le lambda optimal n'est pas dans la grille).
-    - Je relie le tout aux formules. Le lambda optimal d'une borne A (sans contrainte de grille) est
-      lambda* = racine(8 m (KL + ln(|grille|/delta))) ; avec lui, la borne vaut exactement
-      risque + racine((KL + ln(|grille|/delta)) / (2m)), qui a la même forme que McAllester. La borne de Seeger
-      est toujours inférieure à McAllester, parce que l'inégalité de Pinsker donne kl(q, p) >= 2 (p - q)^2.
-      Ces deux relations sont VÉRIFIÉES par le code (assertions, sur un grand nombre de cas) : si mon
-      raisonnement était faux, le script s'arrêterait.
-
-À QUOI ÇA ME SERT
-    C'est le tableau et les trois figures de la question 1 du rapport. Comprendre ces formules me sert aussi pour
-    la suite : le certificat que je reporterai à la question 2 est une de ces trois bornes évaluée sur un posterior.
-
-LIMITES QUE J'ASSUME
-    - Les figures supposent un risque observé de 0,1 (celui du sujet). La borne de Seeger gagne surtout quand le
-      risque observé est petit ; je regarde ce point dans le tableau 4, avec le risque observé qui varie.
-    - Les bornes sont des majorants valables avec probabilité 95 % ; ce ne sont pas des estimations du vrai risque.
-
-Usage : python q1_bornes.py   (écrit partie2/results/q1_bornes_tables.md et partie2/figures/q1_bornes_*.png)
+Usage : python3 q1_bornes.py   (écrit partie2/results/q1_bornes_tables.md et partie2/figures/q1_bornes_*.png)
 """
 import os
 import sys
@@ -201,11 +173,11 @@ def tableaux(n_verifs):
     for m in (50, 100, 1000, 10_000, 100_000):
         cb = np.log(2 * np.sqrt(m) / pb.DELTA)
         rows.append([m, num(C_GRID, 2), num(cb, 2), "A" if C_GRID < cb else "B"])
-    out += ["## Tableau 3 : la constante de la pénalité, ln(|grille|/δ) pour A et ln(2√m/δ) pour B",
+    out += ["## Tableau 3 : la constante de la pénalité, ln(15/δ) pour A (15 = taille de la grille) et ln(2√m/δ) pour B",
             f"Les deux bornes ont la forme « risque + racine((KL + constante) / (2m)) » (A au λ optimal). La constante de B "
             f"croît avec m ; celle de A est fixe. Elles sont égales quand 2√m = |grille|, c'est-à-dire m = "
             f"{num((len(pb.GRID) / 2) ** 2, 2)}. Au-delà, la constante de A est plus petite.\n",
-            md_table(["m", "A : ln(|grille|/δ)", "B : ln(2√m/δ)", "Constante la plus petite"], rows), ""]
+            md_table(["m", "A : ln(15/δ)", "B : ln(2√m/δ)", "Constante la plus petite"], rows), ""]
 
     # --- Tableau 4 : effet du risque observé ----------------------------------------------------------
     rows = []
@@ -226,7 +198,7 @@ def tableaux(n_verifs):
             md_table(["λ", "Borne A(λ)"], rows), ""]
 
     # --- balayage global --------------------------------------------------------------------------------
-    n = tot = 0
+    tot = 0
     wins = {"A": 0, "B": 0, "Seeger": 0}
     a_lt_b = 0
     for m in np.unique(np.round(np.logspace(np.log10(50), 5, 20)).astype(int)):

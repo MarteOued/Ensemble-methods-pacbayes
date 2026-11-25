@@ -1,0 +1,22 @@
+% Fichier généré par rapport/build_tables.py : ne pas modifier à la main.
+\begin{table}[tbp]
+\centering
+\scriptsize
+\caption{Idem, par rapport à la régression logistique.}
+\label{tab:ann_gain_lr}
+\fitwidth{%
+\begin{tabular}{lccccccccc}
+\toprule
+\textbf{Méthode} & \textbf{$\Delta$ acc.} & \textbf{G/N/P acc.} & \textbf{p acc.} & \textbf{$\Delta$ bal. acc.} & \textbf{G/N/P bal. acc.} & \textbf{p bal. acc.} & \textbf{$\Delta$ AUC} & \textbf{G/N/P AUC} & \textbf{p AUC} \\
+\midrule
+Bagging (le mien) & +1,13 & 15/0/10 & 1,000 & +5,58 & 9/0/1 & 0,258 & +2,07 & 12/0/13 & 0,763 \\
+Forêt aléatoire & +2,09 & 16/0/9 & 0,426 & +4,35 & 9/0/1 & 0,258 & +3,24 & 14/0/11 & 0,220 \\
+AdaBoost stumps (le mien) & +1,78 & 14/1/10 & 0,356 & +5,88 & 7/0/3 & 0,244 & +2,04 & 14/0/11 & 0,537 \\
+AdaBoost prof. 3 (le mien) & +1,70 & 11/1/13 & 1,000 & +6,57 & 9/0/1 & 0,223 & +2,01 & 16/0/9 & 0,763 \\
+Gradient boosting & +1,52 & 13/0/12 & 1,000 & +5,95 & 8/0/2 & 0,258 & +1,91 & 12/0/13 & 0,763 \\
+Hist. gradient boosting & +1,54 & 12/0/13 & 1,000 & +8,28 & 9/0/1 & 0,068 & +1,97 & 13/0/12 & 0,763 \\
+Stacking (le mien) & +1,60 & 18/1/6 & 0,106 & +4,86 & 8/0/2 & 0,258 & +2,05 & 18/0/7 & 0,062 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

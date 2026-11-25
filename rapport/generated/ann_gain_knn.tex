@@ -1,0 +1,22 @@
+% Fichier généré par rapport/build_tables.py : ne pas modifier à la main.
+\begin{table}[tbp]
+\centering
+\scriptsize
+\caption{Idem, par rapport au kNN.}
+\label{tab:ann_gain_knn}
+\fitwidth{%
+\begin{tabular}{lccccccccc}
+\toprule
+\textbf{Méthode} & \textbf{$\Delta$ acc.} & \textbf{G/N/P acc.} & \textbf{p acc.} & \textbf{$\Delta$ bal. acc.} & \textbf{G/N/P bal. acc.} & \textbf{p bal. acc.} & \textbf{$\Delta$ AUC} & \textbf{G/N/P AUC} & \textbf{p AUC} \\
+\midrule
+Bagging (le mien) & +2,36 & 15/0/10 & 0,024 & +0,95 & 5/0/5 & 1,000 & +4,06 & 20/0/5 & < 0,001 \\
+Forêt aléatoire & +3,33 & 20/1/4 & 0,003 & -0,27 & 4/1/5 & 1,000 & +5,23 & 22/0/3 & < 0,001 \\
+AdaBoost stumps (le mien) & +3,01 & 15/1/9 & 0,015 & +1,25 & 6/0/4 & 1,000 & +4,03 & 21/0/4 & < 0,001 \\
+AdaBoost prof. 3 (le mien) & +2,93 & 18/0/7 & 0,010 & +1,94 & 7/0/3 & 1,000 & +4,00 & 23/0/2 & < 0,001 \\
+Gradient boosting & +2,76 & 16/0/9 & 0,015 & +1,33 & 6/0/4 & 1,000 & +3,89 & 21/0/4 & < 0,001 \\
+Hist. gradient boosting & +2,77 & 17/0/8 & 0,008 & +3,65 & 8/0/2 & 0,342 & +3,95 & 21/0/4 & < 0,001 \\
+Stacking (le mien) & +2,83 & 22/1/2 & < 0,001 & +0,24 & 5/1/4 & 1,000 & +4,03 & 23/0/2 & < 0,001 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

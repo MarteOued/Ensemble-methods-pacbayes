@@ -10,3 +10,14 @@ project.pdf
 **/results/*_test*
 **/results/*.log
 **/figures/*_test*
+
+# fichiers auxiliaires de LaTeX (rapport/rapport.pdf, lui, est suivi)
+rapport/*.aux
+rapport/*.log
+rapport/*.out
+rapport/*.toc
+rapport/*.fls
+rapport/*.fdb_latexmk
+rapport/*.synctex.gz
+rapport/*.bbl
+rapport/*.blg

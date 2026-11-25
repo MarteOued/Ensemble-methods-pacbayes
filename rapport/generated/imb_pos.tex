@@ -1,0 +1,25 @@
+% Fichier généré par rapport/build_tables.py : ne pas modifier à la main.
+\begin{table}[tbp]
+\centering
+\small
+\caption{Jeux déséquilibrés : rang moyen de chaque méthode pour chaque métrique, avec sa position entre parenthèses ; dernière colonne : places gagnées (+) ou perdues ($-$) en passant de l'accuracy à la balanced accuracy.}
+\label{tab:imb_pos}
+\fitwidth{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Méthode} & \textbf{Accuracy} & \textbf{Balanced accuracy} & \textbf{F1 (minorité)} & \textbf{AUC} & \textbf{Places gagnées (acc. $\rightarrow$ bal. acc.)} \\
+\midrule
+Arbre seul & 9,40 (10) & 4,90 (3) & 5,50 (5) & 10,00 (10) & +7 \\
+Régression logistique & 6,50 (9) & 8,60 (10) & 8,25 (10) & 5,40 (6) & -1 \\
+kNN (k=7) & 5,15 (6) & 6,10 (6) & 5,85 (6) & 8,10 (9) & +0 \\
+Bagging (le mien) & 5,10 (4) & 5,00 (5) & 5,00 (4) & 5,60 (7) & -1 \\
+Forêt aléatoire & 3,90 (2) & 6,20 (8) & 6,05 (8) & 2,80 (1) & -6 \\
+AdaBoost stumps (le mien) & 5,50 (7) & 6,10 (6) & 6,00 (7) & 5,60 (7) & +1 \\
+AdaBoost prof. 3 (le mien) & 5,10 (4) & 3,90 (2) & 4,40 (2) & 3,90 (2) & +2 \\
+Gradient boosting & 6,20 (8) & 4,90 (3) & 4,80 (3) & 4,90 (5) & +5 \\
+Hist. gradient boosting & 4,35 (3) & 2,70 (1) & 2,70 (1) & 4,20 (3) & +2 \\
+Stacking (le mien) & 3,80 (1) & 6,60 (9) & 6,45 (9) & 4,50 (4) & -8 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

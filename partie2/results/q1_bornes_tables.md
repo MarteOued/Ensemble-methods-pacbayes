@@ -35,10 +35,10 @@ Trois versions de la borne A : (a) λ optimal continu, SANS borne de l'union (va
 | 10000 | 20 | 1356 | 0,1339 | 0,1358 | 0,1379 | 0,0019 | 0,0021 | 0,0040 |
 | 10000 | 50 | 2059 | 0,1515 | 0,1528 | 0,1528 | 0,0013 | 0,0000 | 0,0013 |
 
-## Tableau 3 : la constante de la pénalité, ln(|grille|/δ) pour A et ln(2√m/δ) pour B
+## Tableau 3 : la constante de la pénalité, ln(15/δ) pour A (15 = taille de la grille) et ln(2√m/δ) pour B
 Les deux bornes ont la forme « risque + racine((KL + constante) / (2m)) » (A au λ optimal). La constante de B croît avec m ; celle de A est fixe. Elles sont égales quand 2√m = |grille|, c'est-à-dire m = 56,25. Au-delà, la constante de A est plus petite.
 
-| m | A : ln(|grille|/δ) | B : ln(2√m/δ) | Constante la plus petite |
+| m | A : ln(15/δ) | B : ln(2√m/δ) | Constante la plus petite |
 |---|---|---|---|
 | 50 | 5,70 | 5,64 | B |
 | 100 | 5,70 | 5,99 | A |

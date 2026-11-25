@@ -1,40 +1,13 @@
 """verify.py : je vérifie que mes implémentations donnent les mêmes résultats que scikit-learn
 
-CE QUE DEMANDE LE SUJET
-    Partie 1, « Méthodes » : « Vérifiez chaque implémentation par rapport à son équivalent
-    scikit-learn ».
+Sujet : « Vérifiez chaque implémentation par rapport à son équivalent scikit-learn ».
+Ce que fait le fichier : sur 6 jeux et 10 découpages, j'entraîne ma version et celle de scikit-learn (mêmes
+réglages, mêmes découpages) et je compare l'erreur de test, l'erreur out-of-bag (bagging), les poids alpha
+(AdaBoost) et les coefficients du méta-modèle (stacking), ainsi que la part de prédictions identiques.
+Note : sklearn utilise alpha = ln((1-eps)/eps), soit 2 fois le mien, ce qui ne change pas le vote ; les écarts
+restants viennent des égalités entre coupures d'arbres (voir colonnes « _ref » : sklearn diverge de lui-même).
 
-CE QUE J'AI FAIT DANS CE FICHIER
-    Pour chaque méthode, je prends ma version (ensembles.py) et la version de scikit-learn, avec les
-    mêmes réglages, et je les entraîne sur exactement les mêmes découpages train/test. Sur 6 jeux de
-    données et 10 découpages chacun, je compare :
-      - le bagging  : l'erreur de test, et l'erreur out-of-bag (la mienne contre celle de sklearn) ;
-      - AdaBoost    : l'erreur de test (stumps et arbres de profondeur 3) et, plus finement, les
-                      poids alpha et les erreurs pondérées des premiers arbres (sklearn utilise
-                      alpha = ln((1-eps)/eps), c'est-à-dire 2 fois le mien, ce qui ne change pas le
-                      signe du vote) ;
-      - le stacking : l'erreur de test et les coefficients du méta-modèle, avec les mêmes plis.
-    Pour chaque méthode, je regarde aussi la part des exemples de test où les deux versions donnent
-    la même prédiction (« accord »).
-
-À QUOI ÇA ME SERT
-    Ce tableau ira dans le rapport : il montre que mes trois implémentations sont correctes avant que
-    je les utilise dans les expériences (run_experiments.py). Je ne m'attends pas à des résultats
-    identiques à la décimale pour le bagging (les bootstraps dépendent du hasard) : je m'attends à
-    des erreurs très proches, avec des écarts du même ordre que la variabilité d'un découpage à
-    l'autre. Pour AdaBoost et le stacking, qui sont presque déterministes, je m'attends à un accord
-    quasi total.
-
-    Un point que j'ai découvert en testant : avec des arbres de profondeur 3, mes alpha divergent de
-    ceux de scikit-learn dans une partie des cas. Pour savoir si c'est un bug, j'ai ajouté une
-    référence : je relance scikit-learn lui-même avec une autre graine (colonnes « _ref »). Quand
-    deux coupures d'un arbre sont à égalité parfaite, la graine décide laquelle est choisie, et un
-    seul choix différent au tour 2 change tous les poids suivants. Si scikit-learn diverge de
-    lui-même dans la même proportion que de moi, alors l'écart vient de ces égalités et non de mon
-    code (et c'est bien ce que je constate).
-
-Usage : python verify.py    (écrit results/verify_tables.md, les tableaux lisibles du rapport ;
-                              results/verify_*.csv, les données brutes ; figures/verify_oob.png)
+Usage : python3 verify.py   (écrit results/verify_tables.md, results/verify_*.csv, figures/verify_oob.png)
 """
 import os
 import sys

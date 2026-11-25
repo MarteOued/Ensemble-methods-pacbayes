@@ -1,0 +1,21 @@
+% Fichier généré par rapport/build_tables.py : ne pas modifier à la main.
+\begin{table}[tbp]
+\centering
+\small
+\caption{Effet du bruit sur les étiquettes d'entraînement : erreur de test moyenne (en \%) de 6 jeux réels équilibrés ; dernière colonne : hausse entre 0 \% et 20 \% de bruit (points).}
+\label{tab:sens_noise}
+\fitwidth{%
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Méthode} & \textbf{bruit 0 \%} & \textbf{bruit 5 \%} & \textbf{bruit 10 \%} & \textbf{bruit 20 \%} & \textbf{Hausse 0 $\rightarrow$ 20 \% (pts)} \\
+\midrule
+Arbre seul & 18,33 & 21,27 & 25,25 & 31,13 & +12,80 \\
+Bagging (le mien) & 13,26 & 13,90 & 14,68 & 17,43 & +4,17 \\
+Forêt aléatoire & 12,44 & 12,80 & 13,48 & 15,35 & +2,91 \\
+AdaBoost stumps (le mien) & 13,10 & 14,67 & 15,66 & 18,36 & +5,27 \\
+AdaBoost prof. 3 (le mien) & 13,13 & 15,01 & 17,12 & 23,01 & +9,88 \\
+Hist. gradient boosting & 13,09 & 14,57 & 16,46 & 21,67 & +8,58 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

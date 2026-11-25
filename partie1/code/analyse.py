@@ -1,57 +1,18 @@
 """analyse.py : l'analyse statistique des expériences de la partie 1
 
-CE QUE DEMANDE LE SUJET
-    Partie 1, « Analyse » : tableaux et figures de résultats, rangs moyens, éventuellement un test
-    statistique pour souligner la significativité d'une méthode, et des conclusions qui répondent à
-    quatre questions : (1) quel gain des ensembles par rapport à un arbre seul et à un modèle d'une autre
-    famille ? (2) bagging ou boosting, sur quels jeux et pourquoi ? (3) le stacking bat-il le meilleur de
-    ses membres, et à quel coût ? (4) sur les jeux déséquilibrés, quelles méthodes souffrent et que change
-    la métrique ? Il demande aussi de montrer comment le classement change avec la métrique.
+Sujet : tableaux, rangs moyens, test de significativité et conclusions sur les 4 questions (gain des ensembles,
+bagging contre boosting, stacking contre ses membres, jeux déséquilibrés).
+Ce que fait le fichier : je lis results/exp_raw.csv et je calcule, pour chaque jeu, la moyenne sur les 10
+découpages, puis les rangs des méthodes (démarche de Demsar 2006), le test de Friedman avec post-hoc de Nemenyi,
+des tests de Wilcoxon avec correction de Holm pour les comparaisons ciblées, et les comparaisons du stacking à ses
+membres (gain et coût). Les rangs sont calculés pour 4 métriques et 3 groupes de jeux (tous, équilibrés,
+déséquilibrés).
+Il écrit results/analyse_tables.md (une section par question), results/analyse_annexe.md (résultats complets),
+figures/cd/ (diagrammes de différences critiques) et figures/rank_by_metric_imbalanced.png.
+Limites assumées : jeux non tous indépendants (abalone8/17, yeast3/6), peu de jeux déséquilibrés (10), hyperparamètres
+non réglés jeu par jeu.
 
-CE QUE J'AI FAIT DANS CE FICHIER
-    Je lis results/exp_raw.csv (résultat de run_experiments.py) et je produis, sans rien recopier à la
-    main :
-      - results/analyse_tables.md : les tableaux du rapport, une section par question du sujet ;
-      - results/analyse_annexe.md : les résultats complets (moyenne ± écart-type sur les 10 découpages,
-        pour chaque jeu, méthode et métrique) ;
-      - figures/cd/ : un diagramme de différences critiques par métrique et par groupe de jeux ;
-      - figures/rank_by_metric_imbalanced.png : comment le classement change avec la métrique.
-
-MES CHOIX D'ANALYSE ET POURQUOI
-    Une valeur par jeu. Pour chaque jeu et chaque méthode, je prends la moyenne de la métrique sur les 10
-    découpages. C'est cette valeur qui entre dans les rangs et les tests : chaque jeu compte donc pour un
-    seul point, quelle que soit sa taille.
-    Les rangs. Comparer des moyennes brutes entre jeux n'a pas de sens (une erreur de 5 % ne veut pas dire
-    la même chose sur un jeu facile et sur un jeu difficile). Sur chaque jeu, je classe donc les méthodes
-    (rang 1 = la meilleure, rang moyen en cas d'égalité), puis je moyenne les rangs sur les jeux. C'est la
-    démarche de Demšar (2006), citée dans la bibliographie du sujet.
-    Test de Friedman, puis Nemenyi. Le test de Friedman répond à « les méthodes sont-elles toutes
-    équivalentes ? » à partir des rangs. S'il rejette (p < 0,05), le test de Nemenyi dit quelles paires
-    diffèrent : deux méthodes sont significativement différentes si leurs rangs moyens s'écartent de plus
-    de la différence critique CD = q * racine(k(k+1) / (6N)), avec k méthodes et N jeux. La valeur q est
-    calculée par scipy (loi de l'étendue studentisée) ; elle redonne bien les valeurs du tableau de
-    Demšar (par exemple 3,164 pour k = 10). Niveau de risque : 5 %.
-    Wilcoxon et Holm pour les comparaisons ciblées. Pour les questions précises (une méthode contre
-    l'arbre seul, bagging contre boosting...), j'utilise le test de Wilcoxon par paires sur les 25 jeux
-    (ou les 10 déséquilibrés), avec la correction de Holm, qui tient compte du fait qu'on fait plusieurs
-    comparaisons à la fois.
-    Métrique mise en avant selon le jeu : accuracy pour un jeu équilibré, balanced accuracy pour un jeu
-    déséquilibré (voir datasets.py). Les rangs sont calculés pour les 4 métriques, séparément, sur trois
-    groupes : tous les jeux, les équilibrés, les déséquilibrés.
-    Stacking contre ses membres. Je compare le stacking à ses 4 membres (arbre de profondeur 5, kNN,
-    régression logistique, Naive Bayes) : au meilleur membre jeu par jeu (choisi après coup, donc
-    favorable aux membres), et au membre qui a la meilleure moyenne sur tous les jeux. Le coût est le
-    rapport entre le temps d'entraînement du stacking et la somme de ceux de ses membres.
-
-LIMITES QUE J'ASSUME
-    - Les jeux ne sont pas tous indépendants : abalone8 et abalone17 viennent du même fichier, comme
-      yeast3 et yeast6. Friedman suppose des jeux indépendants ; je le signale dans le rapport.
-    - Avec 10 jeux déséquilibrés seulement, la différence critique est grande : peu de différences
-      ressortent comme significatives, même quand elles existent.
-    - Les jeux à 7 ou 10 exemples minoritaires dans le test (libras, yeast6) donnent des F1 très bruités.
-    - Les hyperparamètres ne sont pas réglés jeu par jeu : un résultat valable pour ces réglages-là.
-
-Usage : python analyse.py
+Usage : python3 analyse.py
 """
 import os
 import time

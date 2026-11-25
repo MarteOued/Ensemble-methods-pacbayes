@@ -1,0 +1,19 @@
+% Fichier généré par rapport/build_tables.py : ne pas modifier à la main.
+\begin{table}[tbp]
+\centering
+\scriptsize
+\caption{Question 5 : différence d'erreur en test, classique $-$ PAC-Bayes (points ; négatif : le classique est meilleur).}
+\label{tab:ann_q5_pairs}
+\fitwidth{%
+\begin{tabular}{lcccccccc}
+\toprule
+\textbf{Comparaison} & \textbf{wdbc} & \textbf{pima} & \textbf{australian} & \textbf{iono} & \textbf{german} & \textbf{spambase} & \textbf{Moyenne} & \textbf{Classique meilleur} \\
+\midrule
+AdaBoost sur stumps contre stumps PAC-bayésiens (A) & -5,3 & -2,3 & -0,1 & -10,5 & -5,2 & -14,4 & -6,3 & 53/60 \\
+Régression logistique contre linéaire PAC-bayésien (A) & -0,5 & -0,5 & 0,0 & -0,9 & -1,0 & -0,3 & -0,5 & 38/60 \\
+Forêt aléatoire contre linéaire PAC-bayésien (A) & 1,5 & -0,6 & -0,5 & -5,8 & -0,5 & -3,2 & -1,5 & 36/60 \\
+Forêt aléatoire contre stumps PAC-bayésiens (A) & -4,2 & -3,5 & -1,4 & -11,6 & -5,4 & -15,3 & -6,9 & 57/60 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

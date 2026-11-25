@@ -1,0 +1,331 @@
+% =====================================================================================================
+% Rapport : méthodes d'ensemble et apprentissage PAC-bayésien (Master 2 MALIA)
+% Compilation : voir rapport/README ou le README racine (cd rapport && python build_tables.py && latexmk -pdf rapport.tex)
+% Les tableaux de rapport/generated/ sont produits par build_tables.py à partir des résultats de mon code.
+% =====================================================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[french]{babel}
+\usepackage[a4paper,margin=2.0cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage[font=small,labelfont=bf,skip=3pt]{caption}
+\usepackage[hidelinks]{hyperref}
+
+\setlist{nosep,leftmargin=1.3em}
+\setlength{\parskip}{2pt plus 1pt}
+\setlength{\textfloatsep}{8pt plus 2pt minus 2pt}
+\setlength{\floatsep}{6pt plus 2pt minus 2pt}
+\setlength{\intextsep}{6pt plus 2pt minus 2pt}
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.85}
+\graphicspath{{../partie1/figures/}{../partie1/figures/cd/}{../partie2/figures/}}
+
+\newcommand{\KL}{\mathrm{KL}}
+\newcommand{\Rh}{\widehat R}
+\newcommand{\risk}{R_{\mathcal D}}
+\newcommand{\klinv}{\overline{\mathrm{kl}}^{-1}}
+\newcommand{\fig}[4]{\begin{figure}[tbp]\centering\includegraphics[width=#2\textwidth]{#1}\caption{#3}\label{#4}\end{figure}}
+\newcommand{\hyp}{\textbf{[hypothèse]}}
+% réduit un tableau à la largeur du texte seulement s'il la dépasse (sinon, taille normale)
+\newsavebox{\tabbox}
+\newcommand{\fitwidth}[1]{\sbox{\tabbox}{#1}\ifdim\wd\tabbox>\textwidth\resizebox{\textwidth}{!}{\usebox{\tabbox}}\else\usebox{\tabbox}\fi}
+
+\title{\textbf{Méthodes d'ensemble et apprentissage PAC-bayésien}\\[2pt]\large Projet du cours de méthodes d'ensemble -- Master MALIA}
+\author{\textit{Martine Ouedraogo}\\ Université Lumière Lyon 2}
+\date{Novembre 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent Dans la première partie, j'implémente moi-même le bagging (avec son erreur out-of-bag), AdaBoost et le stacking, je les vérifie contre
+scikit-learn et je les compare à des forêts aléatoires, du gradient boosting et des baselines sur 25 jeux de données, avec une métrique adaptée
+à chaque jeu, puis je cherche pourquoi le bagging ou le boosting l'emporte (bruit, profondeur, biais et variance). Dans la seconde partie, j'exécute,
+compare et explique le code PAC-bayésien fourni : trois bornes, les deux algorithmes qui les minimisent, l'effet du prior, le passage des stumps aux classifieurs
+linéaires, et la comparaison avec l'apprentissage classique. Tous les tableaux et figures sont produits par le code du dépôt (voir le README).
+\end{abstract}
+
+\section{Introduction}
+Le dépôt est organisé en deux dossiers, \texttt{partie1/} et \texttt{partie2/}, chacun avec son code, ses résultats et ses figures ; le README décrit chaque
+script et donne la commande qui reproduit chaque tableau et chaque figure. Les tableaux de ce rapport sont écrits par mon code, jamais à la main, et les
+chiffres du texte sont recopiés depuis eux. Les explications que je n'ai pas testées sont signalées par~\hyp.
+
+% =====================================================================================================
+\section{Partie 1 : méthodes d'ensemble}
+\subsection{Rappel des algorithmes}
+Je note $m$ le nombre d'exemples d'entraînement, $(x_i,y_i)$ les exemples avec $y_i\in\{-1,+1\}$. Un arbre complet a un biais faible et une variance forte ; un
+\emph{stump} (profondeur 1) a un biais fort et une variance faible.
+
+\paragraph{Bagging et erreur out-of-bag (implémenté).} Pour $b=1,\dots,B$, je tire un bootstrap $\mathcal B_b$ de $m$ exemples avec remise et j'entraîne un arbre complet $h_b$ dessus ;
+la prédiction est le vote majoritaire $\mathrm{sign}\big(\sum_b h_b(x)\big)$. Un bootstrap contient en moyenne $1-1/e\approx 63{,}2~\%$ d'exemples distincts ; les autres sont
+\emph{hors-sac}. L'erreur out-of-bag est $\frac1m\sum_i \mathbb 1\big[\mathrm{sign}\big(\sum_{b:\,i\notin\mathcal B_b}h_b(x_i)\big)\neq y_i\big]$ : chaque exemple n'est prédit que par les arbres qui ne
+l'ont pas vu, ce qui estime l'erreur de test sans jeu de validation. La \emph{forêt aléatoire} ajoute le tirage de $\sqrt d$ variables à chaque coupure.
+
+\paragraph{AdaBoost discret (implémenté).} Poids initiaux $w_i=1/m$. À chaque tour $t$, un arbre $h_t$ est entraîné avec les poids $w$ ; on calcule
+$\varepsilon_t=\sum_{i:\,h_t(x_i)\ne y_i}w_i$, $\alpha_t=\tfrac12\ln\frac{1-\varepsilon_t}{\varepsilon_t}$ et $w_i\leftarrow w_i\,e^{-\alpha_t y_ih_t(x_i)}/Z_t$ ; le classifieur final est $\mathrm{sign}\big(\sum_t\alpha_t h_t(x)\big)$.
+Les exemples mal classés voient leur poids augmenter : le boosting réduit surtout le biais, mais la perte exponentielle le rend sensible au bruit. Je m'arrête si $\varepsilon_t\ge 1/2$ et je borne $\varepsilon_t$ à $10^{-10}$ s'il est nul.
+
+\paragraph{Gradient boosting.} \texttt{GradientBoostingClassifier} ajuste à chaque étape un arbre dans la direction du gradient de la perte logistique ; \texttt{HistGradientBoostingClassifier} discrétise d'abord les variables en 255 classes.
+
+\paragraph{Stacking (implémenté).} Quatre modèles de base de familles différentes (arbre de profondeur 5, kNN, régression logistique, Naive Bayes) sont combinés par un méta-modèle logistique entraîné sur des
+prédictions \emph{out-of-fold} : le train est coupé en 5 plis, chaque modèle de base prédit le pli qu'il n'a pas vu, puis les modèles sont réentraînés sur tout le train. Cela évite la fuite d'information (un arbre complet prédit parfaitement ses propres
+données) ; chaque modèle de base est entraîné $5+1=6$ fois.
+
+\paragraph{Vérification contre scikit-learn.} J'ai comparé chaque implémentation à son équivalent, avec les mêmes réglages et les mêmes découpages, sur 6 jeux $\times$ 10 découpages (tableau~\ref{tab:verify}). AdaBoost sur stumps
+et le stacking donnent des prédictions \emph{identiques} (accord de 100~\%, $\alpha_t$, $\varepsilon_t$ et coefficients du méta-modèle identiques). Le bagging dépend du hasard des bootstraps : son erreur est de 13,30~\% contre 13,17~\%,
+avec un accord de 98,02~\%, au niveau de l'accord de scikit-learn avec lui-même quand on change la graine (98,10~\%) ; l'erreur OOB moyenne est de 13,71~\% contre 13,60~\%.
+Pour AdaBoost sur profondeur 3, mes $\alpha_t$ s'écartent de ceux de scikit-learn dans 11 cas sur 60, et scikit-learn s'écarte de lui-même dans 9 cas sur 60 quand on ne change que sa graine : quand deux coupures sont à égalité parfaite, la graine décide, et un seul choix
+différent modifie tous les poids suivants. J'ai vérifié que ma formule de mise à jour des poids redonne exactement les $\alpha_t$ de scikit-learn lorsque ce hasard est écarté.
+\input{generated/verify}
+
+\subsection{Protocole expérimental}
+\paragraph{Jeux de données.} J'utilise 25 jeux : les 22 de \texttt{bk.REAL\_SMALL} et \texttt{bk.REAL\_LARGE} plus \texttt{yeast6}, \texttt{wine4} et \texttt{abalone17}, que le chargeur fourni sait lire et qui sont bien plus déséquilibrés (1,4 à 3,3~\% de minorité).
+J'ai écarté \texttt{abalone20} (26 exemples positifs) et \texttt{hayes} (132 exemples), trop petits. Aucun jeu n'est sous-échantillonné, y compris \texttt{bankmarketing} (45\,211 exemples). Le tableau~\ref{tab:datasets} les décrit.
+\emph{Seuil de déséquilibre :} un jeu est déséquilibré si sa classe minoritaire représente moins de 15~\% des exemples. Ce seuil est conventionnel ; il classe comme déséquilibrés les cinq jeux cités par le sujet (\texttt{yeast3},
+\texttt{libras}, \texttt{satimage}, \texttt{pageblocks}, \texttt{abalone8}), et aucun jeu n'est entre 14,3~\% et 23,5~\% : tout seuil dans cet intervalle donne la même partition (15 jeux équilibrés, 10 déséquilibrés). Sur les jeux les plus déséquilibrés le test contient très peu d'exemples
+minoritaires (7 pour \texttt{libras}, 10 pour \texttt{yeast6}, 16 pour \texttt{wine4}, 17 pour \texttt{abalone17}) : les métriques centrées sur cette classe y sont très bruitées.
+\input{generated/datasets}
+
+\paragraph{Découpages et prétraitement.} Pour chaque jeu, 10 découpages train/test \emph{stratifiés} 70/30 (graine 0 pour les découpages, graines 0 à 9 pour les modèles). Les 10 méthodes reçoivent les mêmes découpages. La standardisation est faite à l'intérieur des méthodes qui en ont besoin (kNN,
+régression logistique, modèles de base du stacking), sur le train seulement.
+
+\paragraph{Méthodes et hyperparamètres.} Réglages fixes, identiques pour tous les jeux, sans optimisation jeu par jeu (le sujet demande de comprendre quand et pourquoi les méthodes aident, pas de les optimiser) ; 200 arbres ou tours pour tous les ensembles, pour les comparer à effort égal.
+\begin{center}\small
+\fitwidth{\begin{tabular}{@{}ll@{\hspace{1.5em}}ll@{}}
+\toprule
+Arbre seul & profondeur illimitée & Forêt aléatoire & 200 arbres, $\sqrt d$ variables\\
+Rég. logistique & standardisée, $C=1$ & AdaBoost (le mien) & 200 tours, profondeur 1 ou 3\\
+kNN & standardisé, $k=7$ & Gradient boosting & 200 arbres, prof. 3, pas 0,1\\
+Bagging (le mien) & 200 arbres complets & Hist. gradient boosting & 200 itérations, sans arrêt précoce\\
+Stacking (le mien) & 4 modèles, méta logistique, 5 plis & & \\
+\bottomrule
+\end{tabular}}
+\end{center}
+Je n'applique aucune pondération des classes, pour que l'effet du déséquilibre reste visible.
+
+\paragraph{Métriques.} Accuracy et AUC pour les jeux équilibrés ; balanced accuracy (moyenne des rappels), F1 de la classe minoritaire et AUC pour les jeux déséquilibrés, où l'accuracy est trompeuse. La classe minoritaire n'est pas toujours celle étiquetée $+1$ : je la détermine sur le train.
+Le seuil de décision est celui par défaut de chaque méthode. Les quatre métriques sont calculées partout ; toutes les méthodes tournent sur un seul c\oe ur pour que les temps soient comparables.
+
+\paragraph{Analyse statistique.} Pour chaque jeu et chaque méthode, je prends la moyenne de la métrique sur les 10 découpages, puis je classe les méthodes sur chaque jeu (rang 1 = meilleure) et je moyenne les rangs \cite{demsar}. Le test de Friedman teste l'équivalence des méthodes ; si elle est rejetée, deux méthodes
+sont significativement différentes (Nemenyi, risque 5~\%) si leurs rangs moyens diffèrent de plus de $CD=q_{0{,}05}\sqrt{k(k+1)/(6N)}$ ($CD=2{,}71$ pour $N=25$ jeux et $k=10$ méthodes ; $4{,}28$ pour les $N=10$ jeux déséquilibrés). Pour les comparaisons ciblées j'utilise le test de Wilcoxon par paires avec la correction de Holm.
+
+\subsection{Résultats}
+Le test de Friedman rejette l'équivalence des 10 méthodes pour les quatre métriques ($p<0{,}001$ sur les 25 jeux ; sur les 10 jeux déséquilibrés $p=0{,}002$ en accuracy et en balanced accuracy, $0{,}011$ en F1, $<0{,}001$ en AUC). En accuracy, la forêt aléatoire a le meilleur rang moyen (3,48), l'arbre seul le plus mauvais (9,36) (tableau~\ref{tab:ranks_all}, figure~\ref{fig:cd}).
+\input{generated/ranks_all}
+\fig{cd_tous_accuracy.png}{0.82}{Diagramme de différences critiques, accuracy, 25 jeux : les méthodes reliées par une barre ne diffèrent pas significativement (Nemenyi, 5~\%).}{fig:cd}
+
+\paragraph{Gain des ensembles sur un arbre seul et sur une autre famille.}
+Par rapport à l'arbre seul, le gain est net : les sept ensembles gagnent de $+3{,}85$ points d'accuracy (bagging) à $+4{,}82$ (forêt aléatoire), sur 25 jeux sur 25 pour presque tous (23 sur 25 pour AdaBoost sur stumps), avec $p<0{,}001$ ; au sens de Nemenyi,
+tous les modèles sauf le kNN sont significativement meilleurs que l'arbre seul. En AUC le gain est de 14 à 15 points, en partie parce que le score d'un arbre complet est presque binaire : son AUC est pratiquement égale à sa balanced accuracy (écart maximal de 0,9 point) et elle est donc mécaniquement basse.
+Par rapport à la régression logistique, je ne mets pas de gain en évidence : de $+1{,}13$ à $+2{,}09$ points en accuracy, mais aucun écart n'est significatif ($p$ corrigés de 0,106 à 1,000), et elle gagne sur 12 jeux sur 25 contre le gradient boosting. Par rapport au kNN, les ensembles gagnent ($+2{,}36$ à $+3{,}33$ points, $p\le 0{,}024$) ; seuls la forêt aléatoire et le stacking
+sont significativement meilleurs au sens de Nemenyi. \emph{Exception :} en balanced accuracy sur les jeux déséquilibrés, aucun ensemble ne bat significativement l'arbre seul (écarts de $-1{,}75$ à $+2{,}18$ points, $p=1{,}000$) \hyp{} : les ensembles moyennent beaucoup d'arbres, rendent des scores plus lissés
+et dépassent moins souvent le seuil par défaut pour la classe rare.
+
+\paragraph{Bagging ou boosting : sur quels jeux ?}
+Mon bagging et mes deux AdaBoost ne se distinguent pas sur les 25 jeux ($-0{,}65$ point contre les stumps et $-0{,}57$ contre la profondeur 3, $p=0{,}937$ ; tableau~\ref{tab:bagboost_pairs}). Le résultat dépend de la métrique et de la méthode de référence : en accuracy, la forêt aléatoire bat le gradient boosting ($+0{,}57$ point, 20 victoires sur 25, $p=0{,}014$) mais pas le Hist.\ gradient boosting
+($p=0{,}921$) ; sur les 10 jeux déséquilibrés en balanced accuracy, c'est l'inverse : le Hist.\ gradient boosting bat la forêt aléatoire sur \emph{les 10 jeux} (écart de 3,93 points, $p=0{,}010$). En prenant le meilleur de chaque famille par jeu, le boosting l'emporte sur les 10 jeux déséquilibrés (avantage léger : 4 candidats contre 2) ; sur les 15 jeux équilibrés, c'est 7 victoires
+pour le boosting, 7 pour le bagging et une égalité. Selon la taille, le boosting gagne 7 jeux sur 13 avec $m<1000$, 7 sur 9 (et une égalité) pour $1000\le m<5000$ et 3 sur 3 pour $m\ge 5000$, mais trois grands jeux ne suffisent pas à conclure. Les plus grands écarts sont sur \texttt{libras} ($+17{,}04$ points pour le boosting), \texttt{balance} ($+10{,}32$) et \texttt{satimage} ($+5{,}06$).
+\input{generated/bagboost_pairs}
+
+\paragraph{Bagging ou boosting : pourquoi ?}
+Sur des jeux réels je ne contrôle ni le bruit ni la structure du problème : j'ai donc fait des expériences où je ne change qu'une chose à la fois. Sur 6 jeux réels équilibrés (\texttt{wdbc}, \texttt{pima}, \texttt{australian}, \texttt{iono}, \texttt{german}, \texttt{vehicle}, 10 découpages), j'inverse au hasard 0, 5, 10 ou 20~\% des étiquettes d'\emph{entraînement}
+(test propre) ; puis, sur deux problèmes simulés dont je connais la vraie classe, \texttt{additive} (somme de fonctions d'une seule variable, qu'une somme de stumps peut représenter) et \texttt{checkerboard} (damier : la classe dépend d'une \emph{combinaison} de deux variables), j'entraîne 30 modèles sur 30 échantillons indépendants de 500 exemples
+et je décompose l'erreur 0-1 en biais (la prédiction majoritaire des 30 modèles est-elle fausse ?) et variance nette, de sorte que erreur $=$ biais $+$ variance nette \cite{domingos}.
+\begin{itemize}
+\item \textbf{Sans bruit ajouté, il n'y a pas de gagnant} : les ensembles ont une erreur de 12,4~\% (forêt aléatoire) à 13,3~\% (bagging), contre 18,3~\% pour l'arbre seul (tableau~\ref{tab:sens_noise}).
+\item \textbf{Le bruit pénalise davantage le boosting.} De 0~\% à 20~\% de bruit, l'erreur augmente de $+2{,}91$ points (forêt), $+4{,}17$ (bagging), $+5{,}27$ (AdaBoost stumps), $+8{,}58$ (Hist.\ gradient boosting), $+9{,}88$ (AdaBoost profondeur 3) et $+12{,}80$ (arbre seul) ; sur chacun des six jeux, la hausse du bagging est inférieure à celle d'AdaBoost profondeur 3 (fig.~\ref{fig:bruit}).
+\item \textbf{Le nombre d'arbres n'a pas le même effet} (fig.~\ref{fig:courbes}). Avec 20~\% de bruit, l'erreur du bagging baisse régulièrement (32,03~\% avec 1 arbre, 17,43~\% avec 200) ; celle d'AdaBoost profondeur 3 \emph{augmente} avec le nombre de tours (21,46~\% après 5 tours, 23,01~\% après 200) ; celle des stumps passe par un minimum (17,45~\% à 50 tours) puis remonte. \hyp{} L'explication classique est que la perte exponentielle donne un poids croissant aux exemples mal étiquetés ; mes courbes y sont compatibles sans la démontrer.
+\item \textbf{Le bagging a besoin d'arbres profonds, le boosting non} (tableau~\ref{tab:sens_depth}) : sans bruit, l'erreur du bagging passe de 20,02~\% (profondeur 1) à 13,26~\% (arbres complets), alors qu'AdaBoost reste entre 13,08~\% et 13,66~\% et atteint 13,10~\% avec de simples stumps. Avec 20~\% de bruit, limiter la profondeur aide aussi le bagging (15,12~\% à profondeur 5 contre 17,43~\% pour des arbres complets).
+\item \textbf{Biais et variance} (fig.~\ref{fig:bv}). Le bagging réduit la variance mais pas le biais : sur \texttt{additive} sans bruit, la variance nette tombe de 5,69~\% (arbre) à 1,56~\% (bagging) alors que le biais ne baisse pas (7,22~\% contre 8,20~\%). AdaBoost sur stumps réduit le biais quand la structure est additive (erreur 5,77~\%, biais 2,94~\%, contre 9,76~\% pour le bagging) mais ne peut pas représenter une interaction : sur \texttt{checkerboard}, il fait 49,78~\% d'erreur (biais 48,02~\%), le niveau du hasard, alors que les autres méthodes font de 3,2~\% (bagging) à 5,7~\% (forêt aléatoire ; avec seulement deux variables, scikit-learn n'en examine qu'une par coupure, ce qui la pénalise). Avec 20~\% de bruit, la variance de l'arbre atteint 20,07~\% et 23,87~\% ; le bagging la ramène à 7,01~\% et 16,49~\% alors qu'AdaBoost profondeur 3 la laisse à 15,55~\% et 19,68~\%.
+\end{itemize}
+\emph{En résumé} : le bagging réduit la variance et exige des arbres profonds ; le boosting réduit le biais avec des arbres simples ; le bruit fait monter la variance, que le bagging réduit mais que le boosting laisse monter ; le boosting de stumps excelle sur un problème additif et échoue sur un problème d'interactions ; la taille du jeu n'a pas d'effet net. Cette étude ne porte que sur des jeux équilibrés :
+elle n'explique donc pas l'avantage du boosting sur les jeux déséquilibrés.
+\input{generated/sens_noise}
+\input{generated/sens_depth}
+\fig{sens_bruit.png}{0.70}{Effet du bruit sur les étiquettes d'entraînement (moyenne de 6 jeux réels équilibrés) : erreur de test (gauche) et dégradation par rapport à 0~\% (droite).}{fig:bruit}
+\fig{sens_courbes.png}{0.70}{Erreur de test selon le nombre d'arbres (bagging) ou de tours (AdaBoost), sans bruit (gauche) et avec 20~\% de bruit (droite).}{fig:courbes}
+\fig{sens_biais_variance.png}{0.66}{Biais (rouge) et variance nette (bleu) sur les deux jeux simulés, sans bruit et avec 20~\% de bruit ; erreur $=$ biais $+$ variance nette.}{fig:bv}
+
+\paragraph{Le stacking bat-il le meilleur de ses membres ? À quel coût ?}
+Non. Face au meilleur membre de chaque jeu (choisi après coup, donc favorable aux membres), le stacking perd en moyenne 2,13 points (10 victoires, 1 égalité, 14 défaites, $p=0{,}170$). Face au membre qui a le meilleur rang moyen (la régression logistique), il gagne $+3{,}07$ points (17 victoires, 1 égalité, 7 défaites, $p=0{,}010$) : il évite d'avoir à choisir. Sur les 15 jeux équilibrés, il ne perd jamais plus de 1,1 point
+par rapport au meilleur membre et le dépasse sur 8 d'entre eux. Mais il s'effondre sur certains jeux déséquilibrés ($-11{,}68$ points sur \texttt{yeast6}, $-14{,}54$ sur \texttt{abalone8}, $-9{,}87$ sur \texttt{abalone17}) ; sur \texttt{abalone17} et \texttt{wine4}, son F1 est nul sur les 10 découpages : il prédit toujours la classe majoritaire \hyp{} (le méta-modèle logistique dépasse rarement 0,5 pour la classe rare).
+\emph{Coût} (tableau~\ref{tab:stack_cost}) : le temps d'entraînement du stacking est 8,0 fois celui de la somme de ses membres (médiane), et environ 41 fois sur \texttt{bankmarketing}, bien plus que le facteur 6 attendu, parce que le kNN, qui ne coûte presque rien à entraîner, coûte à la prédiction, et que le stacking doit prédire chaque pli : sur \texttt{bankmarketing}, ces prédictions représentent environ 88~\% du temps cumulé des membres sur les 5 plis (proportion identique sur deux exécutions complètes).
+\input{generated/stack_cost}
+
+\paragraph{Jeux déséquilibrés : quelles méthodes souffrent, que change la métrique ?}
+\emph{L'accuracy est trompeuse} : sur \texttt{abalone17}, \texttt{wine4} et \texttt{abalone8}, la meilleure accuracy obtenue par les 10 méthodes (98,6~\%, 96,7~\%, 86,4~\%) est exactement celle d'un classifieur qui répond toujours la classe majoritaire, alors que leurs meilleures balanced accuracy ne sont que de 53,4~\%, 55,6~\% et 56,4~\%.
+\emph{Le classement change fortement} (tableau~\ref{tab:imb_pos}, fig.~\ref{fig:rang}) : de l'accuracy à la balanced accuracy, le stacking passe du rang 1 au rang 9, la forêt aléatoire du 2 au 8, alors que l'arbre seul passe du 10 au 3 et le gradient boosting du 8 au 3 ; la corrélation de Kendall entre les classements selon l'accuracy et la balanced accuracy est de $-0{,}05$, alors qu'elle est de 0,93 entre balanced accuracy et F1.
+\emph{Qui souffre :} la régression logistique (dernière en balanced accuracy, rang moyen 8,60 ; 50,7~\% sur \texttt{satimage}), le stacking et la forêt aléatoire ; \emph{qui résiste :} le Hist.\ gradient boosting (premier en balanced accuracy et en F1, rang 2,70), AdaBoost profondeur 3 et l'arbre seul. Avec $CD=4{,}28$, seules deux différences sont significatives en balanced accuracy : Hist.\ gradient boosting et AdaBoost profondeur 3 contre la régression logistique. La forêt aléatoire est première en AUC (2,80) mais huitième en balanced accuracy \hyp{} : ses scores ordonnent bien les exemples mais le seuil par défaut (0,5) fait rarement prédire la classe rare ; il faudrait ajuster le seuil sur un jeu de validation pour le tester.
+\input{generated/imb_pos}
+\fig{rank_by_metric_imbalanced.png}{0.52}{Jeux déséquilibrés : le rang moyen de chaque méthode change avec la métrique.}{fig:rang}
+
+\paragraph{Coût de calcul et limites.} Les temps d'entraînement médians vont de l'ordre de 0,001~s (kNN) à 0,4--0,6~s (mon bagging, écrit en Python pur et non optimisé) ; sur \texttt{bankmarketing}, mon bagging demande environ 30 à 36~s contre 3,4 à 3,9~s pour la forêt aléatoire et environ 2~s pour le Hist.\ gradient boosting (annexe, tableau~\ref{tab:ann_cost}). \emph{Les temps absolus varient d'environ 30~\% d'une exécution complète à l'autre} (j'en ai refait deux, sur une machine non dédiée) : seuls les ordres de grandeur et les rapports (comme le facteur 8 du stacking) sont fiables.
+Les jeux ne sont pas tous indépendants (\texttt{abalone8} et \texttt{abalone17} viennent du même fichier, comme \texttt{yeast3} et \texttt{yeast6}), alors que Friedman le suppose ; avec 10 jeux déséquilibrés, $CD$ est grand et peu de différences ressortent comme significatives ; les hyperparamètres ne sont pas réglés jeu par jeu et le seuil de décision n'est pas ajusté.
+
+% =====================================================================================================
+\section{Partie 2 : bornes PAC-bayésiennes et leur minimisation}
+\subsection{Cadre et protocole}
+Un \emph{prior} $P$, fixé avant de voir l'échantillon $S$ de taille $m$, et un \emph{posterior} $Q$, appris sur $S$, sont deux distributions sur des votants $h$. Le classifieur de Gibbs $G_Q$ tire $h\sim Q$ et prédit $h(x)$ ; le vote majoritaire $B_Q$ prédit le signe de $\mathbb E_{h\sim Q}h(x)$, avec $\risk(B_Q)\le 2\risk(G_Q)$.
+Avec probabilité au moins $1-\delta$ ($\delta=0{,}05$), pour tout $Q$ \cite{mcallester,langford} :
+\begin{align*}
+\text{(A)}\quad & \risk(G_Q)\le \Rh_S(G_Q)+\frac{\KL(Q\|P)+\ln\frac{|\Lambda|}{\delta}}{\lambda}+\frac{\lambda}{8m}\quad\text{pour tout }\lambda\in\Lambda=\{1,2,4,\dots,16384\},\\
+\text{(B)}\quad & \risk(G_Q)\le \Rh_S(G_Q)+\sqrt{\frac{\KL(Q\|P)+\ln\frac{2\sqrt m}{\delta}}{2m}},\\
+\text{(Seeger)}\quad & \risk(G_Q)\le \klinv\Big(\Rh_S(G_Q),\frac{\KL(Q\|P)+\ln\frac{2\sqrt m}{\delta}}{m}\Big).
+\end{align*}
+Une borne évaluée sur un posterior est un \emph{certificat} : une garantie sur le risque de Gibbs calculée sans jeu de test. Deux cadres, avec le code fourni (non modifié) : des distributions \emph{catégorielles sur des stumps} $\pm\mathrm{sign}(x_j-\theta)$ (pour A, le minimiseur à $\lambda$ fixé est le posterior de Gibbs $Q\propto Pe^{-\lambda\Rh_S}$ ; pour B, une descente de gradient L-BFGS), et des
+\emph{gaussiennes sur des classifieurs linéaires} $P=\mathcal N(\mathbf w_0,\sigma^2I)$, $Q=\mathcal N(\mathbf w,\sigma^2I)$, avec $\KL=\|\mathbf w-\mathbf w_0\|^2/(2\sigma^2)$, une perte probit pour le risque de Gibbs, un vote $\mathrm{sign}\langle\mathbf w,x\rangle$ et $\sigma=1$ \cite{germain}.
+Chaque jeu est découpé (fonction \texttt{split} fournie) en une partie \emph{prior} (14~\%), l'échantillon $S$ (56~\%, où j'apprends $Q$ et calcule le certificat) et un test (30~\%) ; le prior ne voit jamais $S$.
+J'utilise six jeux équilibrés (30 à 44,5~\% de minorité) de tailles variées (351 à 4\,597 exemples, 8 à 57 variables) : \texttt{wdbc}, \texttt{pima}, \texttt{australian}, \texttt{iono}, \texttt{german}, \texttt{spambase}, avec 10 découpages chacun ; j'écarte les jeux déséquilibrés, où une borne sur le risque 0-1 favorise le classifieur \og toujours majoritaire\fg{}.
+Comme \texttt{run\_categorical} ne renvoie pas la distribution $Q$, j'ai refait ses étapes avec les fonctions fournies, et chacun de mes scripts \emph{vérifie par une assertion} que mes résultats sont identiques à ceux de \texttt{run\_categorical} et \texttt{run\_gaussian}.
+
+\subsection{Question 1 : les trois bornes et leurs formules}
+Pour un risque observé de 0,1, j'ai tracé les bornes en fonction de $m$ (fig.~\ref{fig:q1m}), de la KL (fig.~\ref{fig:q1k}) et de $\lambda$ (fig.~\ref{fig:q1l}) ; pour A, je prends le meilleur $\lambda$ de la grille comme l'algorithme fourni. Les trois bornes croissent avec la KL et décroissent avec $m$ : pour $m=100$, elles passent de 0,23--0,27 à 0,78--0,83 quand la KL va de 0 à 100, alors que pour $m=10\,000$ elles restent entre 0,11 et 0,18 : plus l'échantillon est grand, moins la KL pèse.
+\begin{itemize}
+\item \textbf{Seeger est la plus serrée} : dans 160 cas sur 160 ($m$ de 50 à 100\,000, KL de 0 à 100) ; par exemple pour $m=1000$ et KL~$=5$ : Seeger 0,153, A 0,174, B 0,178. C'est une conséquence de l'inégalité de Pinsker $\mathrm{kl}(q,p)\ge 2(p-q)^2$ : B est une version relâchée de Seeger (vérifié par assertion sur 180 combinaisons). Le gain de Seeger vient des petits risques : à partir d'un risque observé d'environ 0,3, A devient aussi serrée (0,374 contre 0,374 à 0,3 ; 0,574 contre 0,577 à 0,5).
+\item \textbf{A contre B.} Au $\lambda$ optimal, A vaut exactement $\Rh+\sqrt{(\KL+\ln\frac{|\Lambda|}{\delta})/(2m)}$, de même forme que B ; seule la constante change : $\ln(|\Lambda|/\delta)=5{,}70$ pour A, fixe, et $\ln(2\sqrt m/\delta)$ pour B, qui croît avec $m$ (7,14 à $m=1000$). Elles sont égales pour $m=(|\Lambda|/2)^2=56{,}25$ ; au-delà, A a la plus petite constante et A est plus petite que B dans 119 cas sur 160, mais pas toujours (pour $m=100$ et KL~$=5$ : A 0,344, B 0,334).
+\item \textbf{A selon $\lambda$} : une courbe en U, parce que $\lambda$ apparaît dans $(\KL+\ln\frac{|\Lambda|}{\delta})/\lambda$ (qui diminue) et dans $\lambda/(8m)$ (qui augmente). Le minimum est en $\lambda^*=\sqrt{8m(\KL+\ln\frac{|\Lambda|}{\delta})}$ (formule vérifiée par le code) : 112, 354 et 1\,121 pour $m=100,1000,10000$ et KL~$=10$, c'est-à-dire qu'il croît comme $\sqrt m$.
+\item \textbf{Le prix de la grille} est de 0,001 à 0,044 (tableau~\ref{tab:q1_price}). Il se décompose en un \emph{coût de l'union} ($\ln|\Lambda|$ en plus, parce qu'on choisit $\lambda$ après avoir vu les données), qui domine pour les petits $m$ (0,042 pour $m=100$, KL~$=1$) et fond avec $m$ (0,004 pour $m=10\,000$), et un \emph{coût de discrétisation} ($\lambda^*$ n'est pas une puissance de 2) d'au plus 0,012. La courbe de A est légèrement en escalier : c'est la grille qui se voit.
+\end{itemize}
+\fig{q1_bornes_m.png}{0.98}{Les trois bornes en fonction de $m$ (risque observé 0,1, $\delta=0{,}05$) pour quatre valeurs de la KL.}{fig:q1m}
+\fig{q1_bornes_kl.png}{0.98}{Les trois bornes en fonction de la KL (risque observé 0,1, $\delta=0{,}05$) pour quatre valeurs de $m$.}{fig:q1k}
+\fig{q1_bornes_lambda.png}{0.66}{Borne A en fonction de $\lambda$ (courbe), valeurs de la grille (points), meilleur $\lambda$ de la grille (rond rouge) et $\lambda^*$ théorique (pointillés) ; haut : effet de $m$ ; bas : effet de la KL.}{fig:q1l}
+\input{generated/q1_price}
+
+\subsection{Question 2 : comparer les deux bornes sur des stumps}
+Sur 6 jeux $\times$ 10 découpages (prior uniforme), je compare les deux algorithmes de \texttt{run\_categorical}. Exemple sur \texttt{wdbc} (moyenne $\pm$ écart-type) : A : borne 0,211 $\pm$ 0,008, certificat de Seeger 0,171 $\pm$ 0,010, KL 4,67, 4,1 votants effectifs, risques de Gibbs 0,102 et du vote 0,093 ; B : 0,213, 0,170, 5,37, 2,6 votants effectifs, 0,099 et 0,095.
+\begin{itemize}
+\item \textbf{Les deux bornes mènent presque au même posterior} (tableau~\ref{tab:q2_same}) : le stump de poids maximal est le même dans 60 cas sur 60 ; la distance en variation totale entre $Q_A$ et $Q_B$ est de 0,00 à 0,11 sur cinq jeux, l'exception étant \texttt{wdbc} (0,23). Les deux posteriors sont quasiment réduits à un seul stump (1,1 à 4,1 votants effectifs).
+\item \textbf{Quel certificat reporter ? Celui de Seeger, évalué sur le posterior renvoyé} : il est le plus serré (la borne minimisée le dépasse de 0,002 à 0,043), et on peut l'évaluer sur le $Q$ choisi par l'algorithme parce que les bornes sont valables \emph{pour tout $Q$ à la fois}. Les certificats de Seeger des deux posteriors diffèrent de moins de 0,0014.
+\item \textbf{Tous les certificats sont valides} : les 120 certificats (60 par borne) dépassent le risque de Gibbs mesuré en test, de 0,04 (\texttt{spambase}) à 0,13 (\texttt{iono}). Je constate seulement qu'aucun n'est pris en défaut : une garantie à 95~\% ne se \og démontre\fg{} pas par 120 exécutions.
+\item \textbf{La borne A selon $\lambda$} (fig.~\ref{fig:q2l}) : le risque de Gibbs en test baisse puis se stabilise ; la KL monte puis plafonne à $\ln|H|$, la KL d'un Dirac sur un stump (à $\lambda$ maximal : 6,27 pour $\ln 587=6{,}38$ sur \texttt{wdbc}, 4,99 pour 4,98 sur \texttt{pima}, 5,92 pour 5,92 sur \texttt{spambase}). La borne A forme un U (minimum pour un $\lambda$ médian de 128 à 512) alors que \emph{le certificat de Seeger se stabilise} dès $\lambda\approx128$ à 256 : A remonte à cause de son terme $\lambda/(8m)$ alors que le posterior ne change plus. C'est un artefact de A, pas du posterior.
+\end{itemize}
+\input{generated/q2_same}
+\fig{q2_lambda_wdbc.png}{0.98}{\texttt{wdbc} : borne A en fonction de $\lambda$ : bornes et risques en test (gauche), KL (milieu), nombre effectif de votants (droite) ; moyenne $\pm$ écart-type sur 10 découpages.}{fig:q2l}
+
+\subsection{Question 3 : l'impact du prior}
+Prior de départ (uniforme, ou $\mathcal N(0,I)$) contre prior appris sur la partie \emph{prior} : pour les stumps, $P\propto e^{-\lambda'\Rh_{\text{prior}}}$ avec $\lambda'=$ (taille de la partie prior)$/4$ ; pour le linéaire, $\mathbf w_0$ minimise la borne B sur la partie prior et $P=\mathcal N(\mathbf w_0,I)$.
+\begin{itemize}
+\item \textbf{La KL s'effondre et le certificat s'améliore dans 240 cas sur 240} (tableau~\ref{tab:q3_global}, fig.~\ref{fig:q3}) : par exemple avec A, \texttt{wdbc} linéaire, KL de 10,15 à 1,80 et certificat de 0,173 à 0,130 ; \texttt{spambase} linéaire, KL de 40,9 à 6,4 et certificat de 0,191 à 0,149 ; \texttt{wdbc} stumps, KL de 4,67 à 1,64.
+\item \textbf{Les risques en test bougent peu} : le prior appris resserre surtout le \emph{certificat}, pas la précision ; seul le risque de Gibbs du linéaire s'améliore sensiblement ($-0{,}014$). L'effet est plus fort pour le linéaire : un $\mathcal N(0,I)$ en grande dimension coûte beaucoup plus cher en KL qu'un uniforme sur quelques centaines de stumps.
+\item \textbf{Pourquoi ça marche} : le prior appris est déjà un bon classifieur. Sur \texttt{wdbc}, $\mathrm{sign}\langle\mathbf w_0,x\rangle$, appris sur les seuls 79 exemples de la partie prior, fait 5,3~\% d'erreur en test ; le posterior n'a presque pas besoin de s'en éloigner.
+\item \textbf{Pourquoi un prior appris est légitime} : la théorie n'exige pas un prior sans données mais un prior \emph{fixé avant de voir $S$}, donc indépendant de $S$. Ici il est appris sur la partie prior, disjointe de $S$ et du test : conditionnellement à elle, $P$ est une distribution fixée et les bornes s'appliquent telles quelles. S'il avait vu $S$, la KL ne mesurerait plus \og de combien on a changé d'avis grâce à $S$\fg{} et la borne serait fausse. Le prix : seuls 56~\% des données servent à apprendre $Q$ et à calculer le certificat.
+\end{itemize}
+\input{generated/q3_global}
+\fig{q3_certificats.png}{0.80}{Certificat de Seeger avec le prior de départ (clair) et le prior appris (foncé), borne A ; les traits noirs sont les risques de Gibbs en test.}{fig:q3}
+
+\subsection{Question 4 : changer de famille de distributions}
+Avec le prior appris pour les deux familles, je compare stumps et linéaire, j'ajoute un Dirac sur le meilleur stump et l'uniforme sur les $k$ meilleurs, puis je trace une courbe en $k$ pour tester mon explication.
+\begin{itemize}
+\item \textbf{Certificats : pas de gagnant net} (le linéaire est meilleur dans 26 exécutions sur 60 : nettement sur \texttt{wdbc}, 0,130 contre 0,156, et \texttt{spambase}, 0,149 contre 0,246, moins bien sur \texttt{pima} et \texttt{australian}). \textbf{Votes : le linéaire gagne sur les 6 jeux} (\texttt{wdbc} 0,035 contre 0,092 ; \texttt{spambase} 0,082 contre 0,203 ; \texttt{iono} 0,126 contre 0,184 ; \texttt{german} 0,248 contre 0,298).
+\item \textbf{Le Dirac sur le meilleur stump est presque identique au posterior de la borne A} (certificats 0,157 contre 0,156 sur \texttt{wdbc}, 0,247 contre 0,246 sur \texttt{spambase}, mêmes risques) : minimiser la borne revient à choisir le meilleur stump.
+\item \textbf{Pourquoi un vote de stumps faible ?} Le risque de Gibbs est \emph{linéaire} en $Q$ : le minimiser concentre $Q$ sur les stumps de plus petit risque, jusqu'au Dirac ; le vote est alors ce seul stump, sans la diversité des erreurs qui fait la force d'un vote. Je l'ai testé : (i) le vote n'a presque aucun avantage sur Gibbs avec des stumps (rapport vote/Gibbs de 0,98) contre \textbf{0,74} pour le linéaire ; (ii) ce qui minimise Gibbs n'est pas ce qui maximise le vote (fig.~\ref{fig:q4}) : pour l'uniforme sur les $k$ meilleurs stumps, Gibbs \emph{augmente} avec $k$ (\texttt{wdbc} : 0,099 à $k=1$, 0,212 à $k=100$) alors que le vote s'améliore à un $k$ intermédiaire sur 5 jeux sur 6 (tableau~\ref{tab:q4_bestk}) ; (iii) mais la diversité n'explique pas tout : même à son meilleur $k$ le vote des stumps reste moins bon que le vote linéaire sur les 6 jeux, car chaque stump ne regarde qu'une variable. Ce \og meilleur $k$\fg{} est choisi sur le test : c'est un diagnostic, pas une méthode.
+\item \textbf{Pourquoi un bon classifieur linéaire ?} Le posterior gaussien est un nuage autour de $\mathbf w$ et son vote est le classifieur central $\mathrm{sign}\langle\mathbf w,x\rangle$ : minimiser le risque de Gibbs du nuage revient à bien placer son centre, donc Gibbs et vote sont alignés ; l'écart de 0,037 entre Gibbs et vote est compatible avec l'idée que le vote moyenne le bruit du nuage \hyp{} (non testé, par exemple en faisant varier $\sigma$).
+\end{itemize}
+Deux conventions du code fourni sont à garder en tête : le vote uniforme sur \emph{tous} les stumps vaut toujours 0 (les stumps vont par paires $h$ et $-h$) et \texttt{vote\_risk} compte les égalités comme des erreurs, ce qui pénalise les $k$ pairs.
+\input{generated/q4_bestk}
+\fig{q4_courbe_k.png}{0.72}{Posterior uniforme sur les $k$ meilleurs stumps : certificat (vert), risque de Gibbs (rouge) et du vote (violet) en fonction de $k$ ; pointillés : vote du posterior de la borne A (violet) et du classifieur linéaire (noir).}{fig:q4}
+
+\subsection{Question 5 : apprentissage classique contre minimisation de borne}
+J'entraîne les méthodes classiques sur toute la partie d'entraînement (prior $+\,S$, 70~\%) et je les teste sur les mêmes 30~\% : AdaBoost sur stumps (le mien), forêt aléatoire, régression logistique, et ma meilleure méthode de la partie~1 sur ces jeux. Mon script recalcule ce classement : la forêt aléatoire arrive première ; comme le sujet la liste déjà, j'ajoute la deuxième, mon stacking. Je les compare au vote des classifieurs PAC-bayésiens (prior appris), avec 10 découpages (tableau~\ref{tab:q5_err}).
+\begin{itemize}
+\item \textbf{Le classique prédit mieux, mais l'écart dépend de la famille.} Erreur moyenne sur les 6 jeux : forêt aléatoire 0,131, stacking 0,135, AdaBoost sur stumps 0,137, régression logistique 0,141, \textbf{PAC-Bayes linéaire 0,146}, PAC-Bayes stumps 0,200. \emph{Linéaire} : quasi à égalité (face à la régression logistique $-0{,}5$ point, le classique étant strictement meilleur dans 38 exécutions sur 60 avec 10 égalités ; face à la forêt $-1{,}5$ point, 36/60) ; sur \texttt{wdbc}, PAC-Bayes linéaire (0,035) bat même la forêt (0,050) ; les écarts importants sont \texttt{iono} (5,8 points) et \texttt{spambase} (3,2 points). \emph{Stumps} : écart net : AdaBoost sur stumps bat les stumps PAC-bayésiens de 6,3 points (53/60), la forêt de 6,9 points (57/60). C'est cohérent avec la question~4.
+\item \textbf{Ce que PAC-Bayes offre en plus} : un certificat calculé sur l'échantillon d'apprentissage, sans jeu de test. Les 240 certificats sont valides (Gibbs en test $\le$ certificat, et vote en test $\le 2\times$ certificat, dans les 240 cas). Une méthode classique n'en fournit aucun.
+\item \textbf{À quel prix.} (1) \emph{Une garantie pessimiste} (tableau~\ref{tab:q5_guar}, fig.~\ref{fig:q5}) : pour le linéaire sur \texttt{wdbc}, le certificat est 0,130 (sur Gibbs), la garantie pour le vote ($2\times$ certificat) 0,259 et l'erreur réelle du vote 0,035, soit 7 fois moins ; sur 3 jeux sur 6, la garantie pour le vote dépasse 0,5. (2) \emph{Une précision un peu moindre}, surtout avec des stumps. (3) \emph{Moins de liberté} : il faut une famille où la KL se calcule.
+\item \textbf{Un point de comparaison honnête.} Une borne \og de test\fg{} sur la forêt aléatoire (risque d'un classifieur fixé, majoré avec probabilité 95~\% par $\klinv(\text{erreur de test},\ln(1/\delta)/n)$) est bien plus serrée (\texttt{wdbc} : 0,100 contre 0,259) mais exige un jeu de test étiqueté, qui n'existe pas au moment de l'apprentissage.
+\item \textbf{Le découpage en trois parties n'explique pas l'écart} : en entraînant les méthodes classiques sur $S$ seul (56~\% au lieu de 70~\%), leur erreur ne change que de $+0{,}4$ point (AdaBoost), $-0{,}1$ (forêt), $0{,}0$ (régression logistique), $+0{,}2$ (stacking).
+\end{itemize}
+\input{generated/q5_err}
+\input{generated/q5_guar}
+\fig{q5_garanties.png}{0.92}{Erreur de test et garanties pour la forêt aléatoire et le linéaire PAC-bayésien : le certificat est calculé sur l'échantillon d'entraînement ; la borne de test de la forêt utilise le jeu de test.}{fig:q5}
+
+\subsection{Limites de la partie 2}
+Six jeux équilibrés et dix découpages : je décris des tendances, sans test statistique. Aucune des deux familles n'est réglée ($\sigma=1$ et la grille de $\lambda$ fournie pour PAC-Bayes ; réglages de la partie~1 pour le classique). La partie prior ne fait que 14~\% des données (de 49 exemples pour \texttt{iono} à 643 pour \texttt{spambase}).
+Ma \og meilleure méthode de la partie~1\fg{} est choisie sur des résultats qui portent sur les mêmes jeux (mais d'autres découpages). La borne \og de test\fg{} de la question~5 utilise le jeu de test : ce n'est pas un certificat obtenu avant le test.
+
+% =====================================================================================================
+\section{Conclusion : ce que PAC-Bayes apporte aux méthodes d'ensemble}
+Un ensemble est un vote pondéré de votants, c'est-à-dire un posterior $Q$ : la théorie PAC-bayésienne donne un cadre pour \emph{garantir} le risque d'un ensemble à partir de l'échantillon d'apprentissage seul, avec la KL comme mesure de complexité et le prior comme moyen d'injecter de l'information en gardant la garantie (question~3) ; elle relie aussi le vote au classifieur de Gibbs.
+Mes expériences montrent trois limites : minimiser une borne sur le risque de Gibbs ne construit pas un bon vote avec des votants faibles et en nombre fini comme les stumps, parce que la borne ne récompense pas la diversité que le bagging ou le boosting cherchent à créer (question~4) ; les certificats sont valides mais pessimistes, surtout pour le vote (question~5) ; et le gain de garantie se paie par une précision un peu moindre, l'écart étant presque nul pour des classifieurs linéaires.
+Côté partie~1 : les ensembles gagnent environ 4 points d'accuracy sur un arbre seul sans battre significativement la régression logistique ; le classement des méthodes dépend fortement de la métrique sur les jeux déséquilibrés ; le bagging réduit la variance et résiste au bruit, le boosting réduit le biais avec des arbres simples.
+
+\section*{Déclaration d'usage de l'IA et vérification}
+\textbf{Usage.} J'ai réalisé ce projet seule, avec l'aide de l'assistant d'IA Claude. J'ai avancé étape par étape : je commençais par demander à Claude de m'expliquer les notions que je ne comprenais pas, puis je collais la consigne ; Claude proposait un plan et le code, et je lisais, je demandais des changements et je validais avant de passer à l'étape suivante. Claude a écrit la majorité du code et m'a aidée à comprendre mes résultats. Les choix de protocole ont été discutés avec lui, et je les ai validés ou modifiés (par exemple, j'ai demandé de garder tous les jeux sans sous-échantillonnage, d'ajouter l'étude de sensibilité, de séparer le dépôt en deux dossiers, un par partie, de produire les tableaux par le code plutôt que de les recopier, de rédiger le rapport en \LaTeX, de choisir les jeux de données utilisés (25 jeux, dont trois jeux très déséquilibrés ajoutés à ceux du cours), de remettre en question le seuil de déséquilibre de 15~\% avant de le valider, etc.). J'ai rédigé le texte du rapport à l'aide des résultats du code, puis Claude l'a corrigé et mis en forme en \LaTeX.
+
+\textbf{Vérification.} Aucun tableau n'est recopié à la main : tous sont générés par le code. J'ai fait relancer toute la chaîne depuis un dépôt vierge : les résultats et les figures sont identiques, sauf les temps de calcul, qui varient d'environ 30~\%. Les chiffres du texte ont été recalculés par des scripts de contrôle, et les fichiers fournis par le sujet n'ont pas été modifiés.
+
+\begin{thebibliography}{9}\small
+\bibitem{demsar} J. Dem\v{s}ar. Statistical comparisons of classifiers over multiple data sets. \emph{JMLR}, 7, 2006.
+\bibitem{germain} P. Germain, A. Lacasse, F. Laviolette, M. Marchand. PAC-Bayesian learning of linear classifiers. \emph{ICML}, 2009.
+\bibitem{langford} J. Langford, J. Shawe-Taylor. PAC-Bayes \& margins. \emph{NIPS}, 2002.
+\bibitem{mcallester} D. McAllester. PAC-Bayesian model averaging. \emph{COLT}, 1999.
+\bibitem{domingos} P. Domingos. A unified bias-variance decomposition for zero-one and squared loss. \emph{AAAI}, 2000.
+\bibitem{he} H. He, E. A. Garcia. Learning from imbalanced data. \emph{IEEE TKDE}, 21, 2009.
+\end{thebibliography}
+
+% =====================================================================================================
+\clearpage
+\appendix
+\section{Tableaux complémentaires}
+Les résultats complets (toutes les métriques, avec écarts-types) sont dans \texttt{partie1/results/} (fichier \texttt{analyse\_annexe.md}) et \texttt{partie2/results/}.
+\subsection*{Partie 1}
+\input{generated/ann_ranks_bal}
+\input{generated/ann_ranks_imb}
+\input{generated/ann_kendall}
+\input{generated/ann_gain_tree}
+\input{generated/ann_gain_lr}
+\input{generated/ann_gain_knn}
+\input{generated/ann_bagboost_ds}
+\input{generated/ann_bagboost_size}
+\input{generated/ann_stack_ds}
+\input{generated/ann_stack_vs}
+\input{generated/ann_cost}
+\input{generated/ann_sens_curves}
+\input{generated/ann_sens_inc}
+\input{generated/ann_sens_bv}
+\input{generated/ann_verify_int}
+\subsection*{Partie 2}
+\input{generated/ann_q1_vals}
+\input{generated/ann_q1_const}
+\input{generated/ann_q1_emp}
+\input{generated/ann_q2_wdbc}
+\input{generated/ann_q2_all}
+\input{generated/ann_q2_cert}
+\input{generated/ann_q3_delta}
+\input{generated/ann_q3_prior}
+\input{generated/ann_q4_fam}
+\input{generated/ann_q4_vote}
+\input{generated/ann_q4_extra}
+\input{generated/ann_q4_cert}
+\input{generated/ann_q5_pb}
+\input{generated/ann_q5_err_full}
+\input{generated/ann_q5_guar_full}
+\input{generated/ann_q5_pairs}
+\input{generated/ann_q5_price}
+\input{generated/ann_q5_best}
+
+% =====================================================================================================
+\clearpage
+\section{Figures complémentaires}
+Figures produites par le code mais non reprises dans le corps du rapport ; chacune est reproductible avec la commande indiquée dans \texttt{rapport/correspondance.md}.
+
+\fig{verify_oob.png}{0.62}{Vérification du bagging (partie~1). Gauche : l'erreur out-of-bag de mon bagging contre celle de scikit-learn, un point par jeu et par découpage. Droite : l'erreur out-of-bag contre l'erreur de test.}{fig:ann_verify}
+\fig{q2_certificats.png}{0.80}{Question~2. Gauche : certificat de Seeger des posteriors de la borne A et de la borne B, avec le risque de Gibbs mesuré en test (trait noir). Droite : un point par posterior (120 en tout) ; tous les points sont au-dessus de la diagonale.}{fig:ann_q2cert}
+\fig{q2_kl_neff_lambda.png}{0.80}{Question~2, borne A, six jeux : KL du posterior (gauche) et nombre effectif de votants (droite) en fonction de $\lambda$.}{fig:ann_q2kl}
+\fig{q3_kl.png}{0.80}{Question~3, borne A : KL du posterior avec le prior de départ (clair) et avec le prior appris (foncé), pour les stumps (gauche) et les classifieurs linéaires (droite).}{fig:ann_q3kl}
+\fig{q3_risques.png}{0.80}{Question~3, borne A : risques de Gibbs et du vote en test avec le prior de départ et avec le prior appris, pour les stumps (gauche) et les classifieurs linéaires (droite).}{fig:ann_q3risk}
+\fig{q4_familles.png}{0.88}{Question~4 (prior appris) : certificat de Seeger, risque de Gibbs et risque du vote en test pour les stumps (borne A), le Dirac sur le meilleur stump et le linéaire (borne A).}{fig:ann_q4fam}
+\fig{q5_erreurs.png}{0.88}{Question~5 : erreur de test des méthodes classiques (AdaBoost sur stumps, forêt aléatoire, régression logistique, stacking) et du vote des posteriors PAC-bayésiens (stumps et linéaire, bornes A et B).}{fig:ann_q5err}
+\fig{q5_nuage.png}{0.70}{Question~5 : chaque point est un découpage (60 en tout). Gauche : forêt aléatoire contre vote du linéaire PAC-bayésien. Droite : AdaBoost sur stumps contre vote des stumps PAC-bayésiens (borne A). Au-dessus de la diagonale, la méthode classique est meilleure.}{fig:ann_q5nuage}
+\fig{cd_tous_balanced_accuracy.png}{0.80}{Diagramme de différences critiques, balanced accuracy, 25 jeux (partie~1).}{fig:ann_cdtous}
+\fig{cd_desequilibres_balanced_accuracy.png}{0.80}{Diagramme de différences critiques, balanced accuracy, 10 jeux déséquilibrés ($CD=4{,}28$) (partie~1).}{fig:ann_cddes}
+
+\end{document}

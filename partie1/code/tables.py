@@ -1,20 +1,8 @@
-"""tables.py : mes petites fonctions pour écrire des tableaux lisibles (Markdown)
+"""tables.py : mes petites fonctions pour écrire des tableaux Markdown lisibles
 
-CE QUE DEMANDE LE SUJET
-    Le sujet veut un rapport avec des tableaux de résultats, et des résultats reproductibles : chaque
-    tableau du rapport doit pouvoir être régénéré par mon code (« un court README expliquant comment
-    reproduire chaque tableau et chaque figure »).
-
-CE QUE J'AI FAIT DANS CE FICHIER
-    Les fichiers CSV de results/ sont des données brutes, difficiles à lire. J'ai donc écrit ici trois
-    fonctions : md_table pour fabriquer un tableau Markdown, et pct / num pour écrire les nombres à la
-    française (virgule décimale, « 12,59 % »). Un tableau Markdown s'affiche comme un vrai tableau
-    dans VS Code et sur GitHub, et se copie facilement dans le rapport.
-
-À QUOI ÇA ME SERT
-    verify.py, run_experiments.py et analyse.py l'utilisent pour écrire leurs tableaux directement
-    depuis les résultats : je ne recopie jamais un chiffre à la main, donc aucun risque d'erreur de
-    recopie.
+Ce que fait le fichier : md_table fabrique un tableau Markdown, pct et num écrivent les nombres à la française
+(virgule décimale, « 12,59 % »). Les scripts d'expériences l'utilisent pour écrire leurs tableaux directement depuis
+les résultats : aucun chiffre n'est recopié à la main.
 """
 import numpy as np
 
